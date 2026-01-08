@@ -19,7 +19,7 @@ import { SignInComponent } from './pages/auth-pages/sign-in/sign-in.component';
 import { SignUpComponent } from './pages/auth-pages/sign-up/sign-up.component';
 import { CalenderComponent } from './pages/calender/calender.component';
 import { StudentListComponent } from './pages/students/student-list/student-list.component';
-import { GuardiansListComponent } from './pages/guardians/guardians-list/guardians-list.component';
+import { GuardianListComponent } from './pages/guardians/guardian-list/guardian-list.component';
 import { ClassAttendanceComponent } from './pages/attendance/class-attendance/class-attendance.component';
 import { StudentsAttendanceComponent } from './pages/attendance/students-attendance/students-attendance.component';
 import { AuthGuard } from './shared/guards/auth.guard';
@@ -121,8 +121,8 @@ export const routes: Routes = [
       // Guardian Management
       {
         path:'guardians',
-        component:GuardiansListComponent,
-        title:'Guardian Search | TailAdmin - Angular Admin Dashboard Template'
+        component:GuardianListComponent,
+        title:'Guardians | TailAdmin - Angular Admin Dashboard Template'
       },
       // Attendance Management
       {

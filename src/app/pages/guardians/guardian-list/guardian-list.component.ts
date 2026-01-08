@@ -4,32 +4,32 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
-import { Student, StudentPagination, StudentFilters } from '../student.model';
-import { StudentService } from '../student.service';
+import { Guardian, GuardianPagination, GuardianFilters } from '../guardian.model';
+import { GuardianService } from '../guardian.service';
 import { AppTableComponent, TableColumn, TableAction } from '../../../shared/components/app-table';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../../shared/components/confirm-dialog';
-import { StudentFormComponent } from '../student-form/student-form.component';
+import { GuardianFormComponent } from '../guardian-form/guardian-form.component';
 
 @Component({
-  selector: 'app-student-list',
+  selector: 'app-guardian-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, AppTableComponent, StudentFormComponent, ConfirmDialogComponent],
-  templateUrl: './student-list.component.html',
-  styleUrls: ['./student-list.component.scss']
+  imports: [CommonModule, ReactiveFormsModule, AppTableComponent, GuardianFormComponent, ConfirmDialogComponent],
+  templateUrl: './guardian-list.component.html',
+  styleUrls: ['./guardian-list.component.scss']
 })
-export class StudentListComponent implements OnInit, OnDestroy {
+export class GuardianListComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
-  students: Student[] = [];
-  pagination: StudentPagination | null = null;
+  guardians: Guardian[] = [];
+  pagination: GuardianPagination | null = null;
   loading = false;
 
   searchForm: FormGroup;
-  currentSortBy = 'studentUid';
+  currentSortBy = 'firstName';
   currentOrderBy: 'asc' | 'desc' = 'asc';
 
   // Modal and Dialog states
-  showStudentForm = false;
+  showGuardianForm = false;
   showConfirmDialog = false;
   confirmDialogData: ConfirmDialogData = {
     title: '',
@@ -38,16 +38,17 @@ export class StudentListComponent implements OnInit, OnDestroy {
     cancelText: 'Cancel',
     type: 'info'
   };
-  selectedStudent: Student | null = null;
+  selectedGuardian: Guardian | null = null;
 
   // Table configuration
   columns: TableColumn[] = [
-    { key: 'studentUid', label: 'Student ID', sortable: true },
+    { key: 'guardianUid', label: 'Guardian ID', sortable: true },
     { key: 'firstName', label: 'First Name', sortable: true },
     { key: 'lastName', label: 'Last Name', sortable: true },
     { key: 'email', label: 'Email', sortable: true },
     { key: 'mobileNumber', label: 'Phone', sortable: true },
-    { key: 'gender', label: 'Gender', sortable: true },
+    { key: 'nationalId', label: 'National ID', sortable: true },
+    { key: 'gender', label: 'Gender' },
     { key: 'status', label: 'Status' },
     { key: 'actions', label: 'Actions', actions: true }
   ];
@@ -59,21 +60,21 @@ export class StudentListComponent implements OnInit, OnDestroy {
       label: 'View Details',
       icon: 'visibility',
       title: 'View Details',
-      onClick: (student: any) => this.viewStudentDetails(student)
+      onClick: (guardian: any) => this.viewGuardianDetails(guardian)
     },
     {
       key: 'edit',
-      label: 'Edit Student',
+      label: 'Edit Guardian',
       icon: 'edit',
-      title: 'Edit Student',
-      onClick: (student: any) => this.editStudent(student)
+      title: 'Edit Guardian',
+      onClick: (guardian: any) => this.editGuardian(guardian)
     },
     {
       key: 'delete',
       label: 'Delete',
       icon: 'delete',
       title: 'Delete',
-      onClick: (student: any) => this.deleteStudent(student)
+      onClick: (guardian: any) => this.deleteGuardian(guardian)
     }
   ];
 
@@ -82,7 +83,7 @@ export class StudentListComponent implements OnInit, OnDestroy {
   total = 0;
 
   constructor(
-    private studentService: StudentService,
+    private guardianService: GuardianService,
     private fb: FormBuilder,
     private toastr: ToastrService
   ) {
@@ -94,13 +95,13 @@ export class StudentListComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.loadStudents();
+    this.loadGuardians();
 
     this.searchForm.get('search')?.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         this.searchForm.patchValue({ page: 1 }, { emitEvent: false });
-        this.loadStudents();
+        this.loadGuardians();
       });
   }
 
@@ -109,10 +110,10 @@ export class StudentListComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  loadStudents(): void {
+  loadGuardians(): void {
     this.loading = true;
 
-    const filters: StudentFilters = {
+    const filters: GuardianFilters = {
       search: this.searchForm.value.search || undefined,
       page: this.page,
       limit: this.limit,
@@ -120,12 +121,12 @@ export class StudentListComponent implements OnInit, OnDestroy {
       orderBy: this.currentOrderBy
     };
 
-    this.studentService.getStudents(filters)
+    this.guardianService.getGuardians(filters)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: any) => {
           if (response.success) {
-            this.students = response.data.students;
+            this.guardians = response.data.guardians;
             this.pagination = response.data.pagination;
             this.total = response.data.pagination.totalElements;
           }
@@ -146,60 +147,60 @@ export class StudentListComponent implements OnInit, OnDestroy {
   onSearch(searchQuery: string): void {
     this.searchForm.patchValue({ search: searchQuery });
     this.page = 1; // Reset to first page on search
-    this.loadStudents();
+    this.loadGuardians();
   }
 
   onSort(sortChange: { field: string; order: 'asc' | 'desc' }): void {
     this.currentSortBy = sortChange.field;
     this.currentOrderBy = sortChange.order;
     this.page = 1; // Reset to first page on sort
-    this.loadStudents();
+    this.loadGuardians();
   }
 
   onPageChange(pageNumber: number): void {
     this.page = pageNumber;
-    this.loadStudents();
+    this.loadGuardians();
   }
 
   onLimitChange(newLimit: any): void {
     this.limit = newLimit;
     this.page = 1; // Reset to first page when limit changes
-    this.loadStudents();
+    this.loadGuardians();
   }
 
   onTableAction(event: { action: string; item: any }): void {
     switch (event.action) {
       case 'view':
-        this.viewStudentDetails(event.item);
+        this.viewGuardianDetails(event.item);
         break;
       case 'edit':
-        this.editStudent(event.item);
+        this.editGuardian(event.item);
         break;
       case 'delete':
-        this.deleteStudent(event.item);
+        this.deleteGuardian(event.item);
         break;
     }
   }
 
-  addNewStudent(): void {
-    this.selectedStudent = null;
-    this.showStudentForm = true;
+  addNewGuardian(): void {
+    this.selectedGuardian = null;
+    this.showGuardianForm = true;
   }
 
-  editStudent(student: Student): void {
-    this.selectedStudent = student;
-    this.showStudentForm = true;
+  editGuardian(guardian: Guardian): void {
+    this.selectedGuardian = guardian;
+    this.showGuardianForm = true;
   }
 
-  viewStudentDetails(student: Student): void {
-    console.log('Viewing student details:', student);
+  viewGuardianDetails(guardian: Guardian): void {
+    console.log('Viewing guardian details:', guardian);
   }
 
-  deleteStudent(student: Student): void {
-    this.selectedStudent = student;
+  deleteGuardian(guardian: Guardian): void {
+    this.selectedGuardian = guardian;
     this.confirmDialogData = {
-      title: 'Delete Student',
-      message: `Are you sure you want to delete ${student.firstName} ${student.lastName}? This action cannot be undone.`,
+      title: 'Delete Guardian',
+      message: `Are you sure you want to delete ${guardian.firstName} ${guardian.lastName}? This action cannot be undone.`,
       confirmText: 'Delete',
       cancelText: 'Cancel',
       type: 'danger'
@@ -209,16 +210,16 @@ export class StudentListComponent implements OnInit, OnDestroy {
   }
 
   onConfirmDialog(): void {
-    if (!this.selectedStudent) return;
+    if (!this.selectedGuardian) return;
     
     if (this.confirmDialogData.type === 'danger') {
       // Delete operation
-      this.studentService.deleteStudent(this.selectedStudent.id)
+      this.guardianService.deleteGuardian(this.selectedGuardian.id)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
             this.toastr.success(response.message);
-            this.loadStudents();
+            this.loadGuardians();
             this.closeConfirmDialog();
           }
         });
@@ -227,17 +228,17 @@ export class StudentListComponent implements OnInit, OnDestroy {
 
   closeConfirmDialog(): void {
     this.showConfirmDialog = false;
-    this.selectedStudent = null;
+    this.selectedGuardian = null;
   }
 
-  onStudentFormClose(): void {
-    this.showStudentForm = false;
-    this.selectedStudent = null;
+  onGuardianFormClose(): void {
+    this.showGuardianForm = false;
+    this.selectedGuardian = null;
   }
 
-  onStudentFormSuccess(): void {
-    this.loadStudents();
-    this.onStudentFormClose();
+  onGuardianFormSuccess(): void {
+    this.loadGuardians();
+    this.onGuardianFormClose();
   }
 
   getStatusBadgeColor(status: string): string {
@@ -248,19 +249,6 @@ export class StudentListComponent implements OnInit, OnDestroy {
         return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300';
       default:
         return 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300';
-    }
-  }
-
-  getGenderDisplay(gender: string): string {
-    switch (gender) {
-      case 'MALE':
-        return 'Male';
-      case 'FEMALE':
-        return 'Female';
-      case 'OTHER':
-        return 'Other';
-      default:
-        return gender;
     }
   }
 }
