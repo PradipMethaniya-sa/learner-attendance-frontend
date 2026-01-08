@@ -1,153 +1,266 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PageBreadcrumbComponent } from '../../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
-
-export interface Student {
-  id: string;
-  studentId: string;
-  fullName: string;
-  email: string;
-  className: string;
-  gender: string;
-  guardianCount: number;
-  guardians: { name: string; avatar: string }[];
-  faceDataComplete: boolean;
-  avatar: string;
-}
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { ToastrService } from 'ngx-toastr';
+import { Student, StudentPagination, StudentFilters } from '../student.model';
+import { StudentService } from '../student.service';
+import { AppTableComponent, TableColumn, TableAction } from '../../../shared/components/app-table';
+import { ConfirmDialogComponent, ConfirmDialogData } from '../../../shared/components/confirm-dialog';
+import { StudentFormComponent } from '../student-form/student-form.component';
 
 @Component({
   selector: 'app-student-list',
   standalone: true,
-  imports: [CommonModule, PageBreadcrumbComponent],
+  imports: [CommonModule, ReactiveFormsModule, AppTableComponent, StudentFormComponent, ConfirmDialogComponent],
   templateUrl: './student-list.component.html',
-  styleUrls: ['./student-list.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrls: ['./student-list.component.scss']
 })
-export class StudentListComponent {
-  // Mock data for students
-  readonly students: Student[] = [
+export class StudentListComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+
+  students: Student[] = [];
+  pagination: StudentPagination | null = null;
+  loading = false;
+
+  searchForm: FormGroup;
+  currentSortBy = 'studentUid';
+  currentOrderBy: 'asc' | 'desc' = 'asc';
+
+  // Modal and Dialog states
+  showStudentForm = false;
+  showConfirmDialog = false;
+  confirmDialogData: ConfirmDialogData = {
+    title: '',
+    message: '',
+    confirmText: '',
+    cancelText: 'Cancel',
+    type: 'info'
+  };
+  selectedStudent: Student | null = null;
+
+  // Table configuration
+  columns: TableColumn[] = [
+    { key: 'studentUid', label: 'Student ID', sortable: true },
+    { key: 'firstName', label: 'First Name', sortable: true },
+    { key: 'lastName', label: 'Last Name', sortable: true },
+    { key: 'email', label: 'Email', sortable: true },
+    { key: 'mobileNumber', label: 'Phone', sortable: true },
+    { key: 'gender', label: 'Gender', sortable: true },
+    { key: 'status', label: 'Status' },
+    { key: 'actions', label: 'Actions', actions: true }
+  ];
+
+  // Table actions
+  tableActions: TableAction[] = [
     {
-      id: '1',
-      studentId: '#STD-001',
-      fullName: 'Alice Johnson',
-      email: 'alice.j@school.edu',
-      className: 'Grade 10-A',
-      gender: 'Female',
-      guardianCount: 2,
-      guardians: [
-        { name: 'John Johnson', avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCC47yasKICt5TE-jK1Czl1Mayhwf5PLydXlGNXUduqAyQIRCTY5KEu_Dmx4e3e0o_zfJO1v4atLLKDy76p_ipwdc_fKQot5zeN1da6on2DUZJSFhY_D46U4fw2ysiHVJteIinGrZwv7SFwgYXb8qRcqNOVzks7_V7Xwkua4jhMA3g6ByGA-4OFie5qisgxTYxGIpxVMX9nPrCwE1D-Wjk08HqMhVZ7f6Sw9M4H6Q9YQgejdQHp-ls0E-aJNnMuj_nSY6hkGJrir9SC' },
-        { name: 'Mary Johnson', avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDOoIlRwIS-aVMnxb-T5vBFoMm1OB8-HUwBaCVcW2CEKftOGOIbgjVtwsXHGZiQIeWUxKmqk2y5pS-RACzgrXXODAvmyL4-vPO7uQrOQ_g3Ji-3PpSoh-qM3edVpV114KvPNt0JlfWQT1DdwIC2NSsoVtMLSQhvCZ5wBhBG8mrjOTGxA4htA_fXwE1gc4zUJlX7jP32MfMTL7CbNxYp_vSTq0GC7lbG7UQf3Hr4pFx7HkuEdSIt8YIGUudo1dmx0T6eXGj-8XLllLG5' }
-      ],
-      faceDataComplete: true,
-      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCclr6tZhecjLch-VGSEdWAg0291sTq6-V56T6rViqTZzy-E2PEBU7sF5QvHGgd29vBmJL6jiXFXfSaMVPsHNGHPjpiZhCX9xJN6srJyrwnYKhwLRz9ItK6CeFIwL6DD_ayDT74nyABE_4CJOPJOCeUIGiOJs6xhUqI6izJa3BejqzBGoVQnoHuJF3J3457ALKldJZyuYlnFUwLjuSIvCNB2iMUeUJ7qbLTeUQS32WON3zl-qZXHliKPBhksHmX6xUbPWh3jGPuZJhM'
+      key: 'view',
+      label: 'View Details',
+      icon: 'visibility',
+      title: 'View Details',
+      onClick: (student: any) => this.viewStudentDetails(student)
     },
     {
-      id: '2',
-      studentId: '#STD-002',
-      fullName: 'Bob Smith',
-      email: 'bob.s@school.edu',
-      className: 'Grade 10-B',
-      gender: 'Male',
-      guardianCount: 1,
-      guardians: [
-        { name: 'Robert Smith', avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA0gnUTvZcRfvAiCtDKvRVyPG5NvK1G4NMKe7GupOgPQA-fdK4mr8W5KPLzfxHqfMnm6sL3Oz8ifamquxo7Ko79k7bFm3OTeplsh3bQOd4lUy5QrfjkcEfD9KGXzX3NHKJpe2sWwyKwon3uIepSHwQ5wvAAcuXziKTVxCL4P9Us122PIcOfQQ4L9HshZKnhQ5oh0-KlWG2OIQFkU0GNwt9XOrJbTsYHWUbvo5vi4Rv_2iKmjQUlkFd_DKarVzxsL-i3D4moAiCoyYDg' }
-      ],
-      faceDataComplete: false,
-      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA0gnUTvZcRfvAiCtDKvRVyPG5NvK1G4NMKe7GupOgPQA-fdK4mr8W5KPLzfxHqfMnm6sL3Oz8ifamquxo7Ko79k7bFm3OTeplsh3bQOd4lUy5QrfjkcEfD9KGXzX3NHKJpe2sWwyKwon3uIepSHwQ5wvAAcuXziKTVxCL4P9Us122PIcOfQQ4L9HshZKnhQ5oh0-KlWG2OIQFkU0GNwt9XOrJbTsYHWUbvo5vi4Rv_2iKmjQUlkFd_DKarVzxsL-i3D4moAiCoyYDg'
+      key: 'edit',
+      label: 'Edit Student',
+      icon: 'edit',
+      title: 'Edit Student',
+      onClick: (student: any) => this.editStudent(student)
     },
     {
-      id: '3',
-      studentId: '#STD-003',
-      fullName: 'Charlie Brown',
-      email: 'charlie.b@school.edu',
-      className: 'Grade 9-A',
-      gender: 'Male',
-      guardianCount: 3,
-      guardians: [
-        { name: 'David Brown', avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA0gnUTvZcRfvAiCtDKvRVyPG5NvK1G4NMKe7GupOgPQA-fdK4mr8W5KPLzfxHqfMnm6sL3Oz8ifamquxo7Ko79k7bFm3OTeplsh3bQOd4lUy5QrfjkcEfD9KGXzX3NHKJpe2sWwyKwon3uIepSHwQ5wvAAcuXziKTVxCL4P9Us122PIcOfQQ4L9HshZKnhQ5oh0-KlWG2OIQFkU0GNwt9XOrJbTsYHWUbvo5vi4Rv_2iKmjQUlkFd_DKarVzxsL-i3D4moAiCoyYDg' },
-        { name: 'Sarah Brown', avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCC47yasKICt5TE-jK1Czl1Mayhwf5PLydXlGNXUduqAyQIRCTY5KEu_Dmx4e3e0o_zfJO1v4atLLKDy76p_ipwdc_fKQot5zeN1da6on2DUZJSFhY_D46U4fw2ysiHVJteIinGrZwv7SFwgYXb8qRcqNOVzks7_V7Xwkua4jhMA3g6ByGA-4OFie5qisgxTYxGIpxVMX9nPrCwE1D-Wjk08HqMhVZ7f6Sw9M4H6Q9YQgejdQHp-ls0E-aJNnMuj_nSY6hkGJrir9SC' },
-        { name: 'Linda Brown', avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDOoIlRwIS-aVMnxb-T5vBFoMm1OB8-HUwBaCVcW2CEKftOGOIbgjVtwsXHGZiQIeWUxKmqk2y5pS-RACzgrXXODAvmyL4-vPO7uQrOQ_g3Ji-3PpSoh-qM3edVpV114KvPNt0JlfWQT1DdwIC2NSsoVtMLSQhvCZ5wBhBG8mrjOTGxA4htA_fXwE1gc4zUJlX7jP32MfMTL7CbNxYp_vSTq0GC7lbG7UQf3Hr4pFx7HkuEdSIt8YIGUudo1dmx0T6eXGj-8XLllLG5' }
-      ],
-      faceDataComplete: true,
-      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA0gnUTvZcRfvAiCtDKvRVyPG5NvK1G4NMKe7GupOgPQA-fdK4mr8W5KPLzfxHqfMnm6sL3Oz8ifamquxo7Ko79k7bFm3OTeplsh3bQOd4lUy5QrfjkcEfD9KGXzX3NHKJpe2sWwyKwon3uIepSHwQ5wvAAcuXziKTVxCL4P9Us122PIcOfQQ4L9HshZKnhQ5oh0-KlWG2OIQFkU0GNwt9XOrJbTsYHWUbvo5vi4Rv_2iKmjQUlkFd_DKarVzxsL-i3D4moAiCoyYDg'
+      key: 'delete',
+      label: 'Delete',
+      icon: 'delete',
+      title: 'Delete',
+      onClick: (student: any) => this.deleteStudent(student)
     }
   ];
 
-  // Filter options
-  readonly classes = ['All Classes', 'Grade 10-A', 'Grade 10-B', 'Grade 9-A', 'Grade 11-C'];
-  readonly genders = ['All Genders', 'Male', 'Female'];
+  page = 1;
+  limit = 10;
+  total = 0;
 
-  // Filter state
-  selectedClass = this.classes[0];
-  selectedGender = this.genders[0];
-  searchTerm = '';
+  constructor(
+    private studentService: StudentService,
+    private fb: FormBuilder,
+    private toastr: ToastrService
+  ) {
+    this.searchForm = this.fb.group({
+      search: [''],
+      page: [1],
+      limit: [10]
+    });
+  }
 
-  // Event handlers
+  ngOnInit(): void {
+    this.loadStudents();
+
+    this.searchForm.get('search')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.searchForm.patchValue({ page: 1 }, { emitEvent: false });
+        this.loadStudents();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  loadStudents(): void {
+    this.loading = true;
+
+    const filters: StudentFilters = {
+      search: this.searchForm.value.search || undefined,
+      page: this.page,
+      limit: this.limit,
+      sortBy: this.currentSortBy,
+      orderBy: this.currentOrderBy
+    };
+
+    this.studentService.getStudents(filters)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: any) => {
+          if (response.success) {
+            this.students = response.data.students;
+            this.pagination = response.data.pagination;
+            this.total = response.data.pagination.totalElements;
+          }
+          this.loading = false;
+        },
+        error: () => {
+          this.loading = false;
+        }
+      });
+  }
+
   onSearchChange(event: Event): void {
-    this.searchTerm = (event.target as HTMLInputElement).value;
+    const value = (event.target as HTMLInputElement).value;
+    this.searchForm.patchValue({ search: value });
   }
 
-  onClassChange(event: Event): void {
-    this.selectedClass = (event.target as HTMLSelectElement).value;
+  // Table component event handlers
+  onSearch(searchQuery: string): void {
+    this.searchForm.patchValue({ search: searchQuery });
+    this.page = 1; // Reset to first page on search
+    this.loadStudents();
   }
 
-  onGenderChange(event: Event): void {
-    this.selectedGender = (event.target as HTMLSelectElement).value;
+  onSort(sortChange: { field: string; order: 'asc' | 'desc' }): void {
+    this.currentSortBy = sortChange.field;
+    this.currentOrderBy = sortChange.order;
+    this.page = 1; // Reset to first page on sort
+    this.loadStudents();
   }
 
-  exportCSV(): void {
-    console.log('Exporting CSV...');
+  onPageChange(pageNumber: number): void {
+    this.page = pageNumber;
+    this.loadStudents();
+  }
+
+  onLimitChange(newLimit: any): void {
+    this.limit = newLimit;
+    this.page = 1; // Reset to first page when limit changes
+    this.loadStudents();
+  }
+
+  onTableAction(event: { action: string; item: any }): void {
+    switch (event.action) {
+      case 'view':
+        this.viewStudentDetails(event.item);
+        break;
+      case 'edit':
+        this.editStudent(event.item);
+        break;
+      case 'delete':
+        this.deleteStudent(event.item);
+        break;
+    }
   }
 
   addNewStudent(): void {
-    console.log('Adding new student...');
+    this.selectedStudent = null;
+    this.showStudentForm = true;
+  }
+
+  editStudent(student: Student): void {
+    this.selectedStudent = student;
+    this.showStudentForm = true;
   }
 
   viewStudentDetails(student: Student): void {
     console.log('Viewing student details:', student);
   }
 
-  editStudent(student: Student): void {
-    console.log('Editing student:', student);
-  }
-
   deleteStudent(student: Student): void {
-    console.log('Deleting student:', student);
+    this.selectedStudent = student;
+    this.confirmDialogData = {
+      title: 'Delete Student',
+      message: `Are you sure you want to delete ${student.firstName} ${student.lastName}? This action cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger'
+    };
+    
+    this.showConfirmDialog = true;
   }
 
-  viewGuardians(student: Student): void {
-    console.log('Viewing guardians for:', student);
+  onConfirmDialog(): void {
+    if (!this.selectedStudent) return;
+    
+    if (this.confirmDialogData.type === 'danger') {
+      // Delete operation
+      this.studentService.deleteStudent(this.selectedStudent.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            this.toastr.success(response.message);
+            this.loadStudents();
+            this.closeConfirmDialog();
+          }
+        });
+    }
   }
 
-  // Get filtered students based on search and filters
-  get filteredStudents(): Student[] {
-    return this.students.filter(student => {
-      const matchesSearch = this.searchTerm === '' || 
-        student.fullName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        student.studentId.toLowerCase().includes(this.searchTerm.toLowerCase());
-      
-      const matchesClass = this.selectedClass === 'All Classes' || student.className === this.selectedClass;
-      
-      const matchesGender = this.selectedGender === 'All Genders' || 
-        student.gender.toLowerCase() === this.selectedGender.toLowerCase();
-      
-      return matchesSearch && matchesClass && matchesGender;
-    });
+  closeConfirmDialog(): void {
+    this.showConfirmDialog = false;
+    this.selectedStudent = null;
   }
 
-  // Get class badge color
-  getClassBadgeColor(className: string): string {
-    switch (className) {
-      case 'Grade 10-A':
-        return 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300';
-      case 'Grade 10-B':
-        return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300';
-      case 'Grade 9-A':
+  onStudentFormClose(): void {
+    this.showStudentForm = false;
+    this.selectedStudent = null;
+  }
+
+  onStudentFormSuccess(): void {
+    this.loadStudents();
+    this.onStudentFormClose();
+  }
+
+  getStatusBadgeColor(status: string): string {
+    switch (status) {
+      case 'ACTIVE':
         return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300';
-      case 'Grade 11-C':
-        return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300';
+      case 'INACTIVE':
+        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300';
       default:
         return 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300';
+    }
+  }
+
+  getGenderDisplay(gender: string): string {
+    switch (gender) {
+      case 'MALE':
+        return 'Male';
+      case 'FEMALE':
+        return 'Female';
+      case 'OTHER':
+        return 'Other';
+      default:
+        return gender;
     }
   }
 }
