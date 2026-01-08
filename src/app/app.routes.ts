@@ -26,6 +26,7 @@ import { AuthGuard } from './shared/guards/auth.guard';
 import { NoAuthGuard } from './shared/guards/no-auth.guard';
 import { SchoolListComponent } from './pages/schools/school-list/school-list.component';
 import { ClassListComponent } from './pages/classes/class-list/class-list.component';
+import { StaffListComponent } from './pages/staff/staff-list/staff-list.component';
 
 export const routes: Routes = [
   {
@@ -143,6 +144,11 @@ export const routes: Routes = [
         path:'classes',
         component:ClassListComponent,
         title:'Classes | TailAdmin - Angular Admin Dashboard Template'
+      },
+      {
+        path:'staff',
+        component:StaffListComponent,
+        title:'Staff | TailAdmin - Angular Admin Dashboard Template'
       },
     ]
   },

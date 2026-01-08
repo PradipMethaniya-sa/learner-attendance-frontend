@@ -1,0 +1,332 @@
+<div class="p-6 sm:p-8">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+        {{ isEditMode ? 'Edit Staff' : 'Add New Staff' }}
+      </h2>
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        {{ isEditMode ? 'Update staff information' : 'Create a new staff member' }}
+      </p>
+    </div>
+    <button 
+      type="button" 
+      (click)="onCancel()" 
+      class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+    >
+      <span class="material-symbols-outlined text-2xl">close</span>
+    </button>
+  </div>
+
+  <!-- Form -->
+  <form [formGroup]="staffForm" (ngSubmit)="onSubmit()" class="space-y-6">
+    <!-- Error Message -->
+    @if (error) {
+      <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+        {{ error }}
+      </div>
+    }
+
+    <!-- Personal Information -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          First Name <span class="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          formControlName="firstName"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+          placeholder="Enter first name"
+        />
+        @if (getErrorMessage('firstName')) {
+          <p class="mt-1 text-sm text-red-600">{{ getErrorMessage('firstName') }}</p>
+        }
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Last Name <span class="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          formControlName="lastName"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+          placeholder="Enter last name"
+        />
+        @if (getErrorMessage('lastName')) {
+          <p class="mt-1 text-sm text-red-600">{{ getErrorMessage('lastName') }}</p>
+        }
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Email <span class="text-red-500">*</span>
+        </label>
+        <input
+          type="email"
+          formControlName="email"
+          [readonly]="isEditMode"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white disabled:bg-gray-100"
+          placeholder="Enter email address"
+        />
+        @if (getErrorMessage('email')) {
+          <p class="mt-1 text-sm text-red-600">{{ getErrorMessage('email') }}</p>
+        }
+        @if (isEditMode) {
+          <p class="mt-1 text-sm text-gray-500">Email cannot be changed</p>
+        }
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Gender <span class="text-red-500">*</span>
+        </label>
+        <select
+          formControlName="gender"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+        >
+          <option value="MALE">Male</option>
+          <option value="FEMALE">Female</option>
+          <option value="OTHER">Other</option>
+        </select>
+        @if (getErrorMessage('gender')) {
+          <p class="mt-1 text-sm text-red-600">{{ getErrorMessage('gender') }}</p>
+        }
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Date of Birth <span class="text-red-500">*</span>
+        </label>
+        <input
+          type="date"
+          formControlName="dob"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+        />
+        @if (getErrorMessage('dob')) {
+          <p class="mt-1 text-sm text-red-600">{{ getErrorMessage('dob') }}</p>
+        }
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          National ID <span class="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          formControlName="nationalId"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+          placeholder="Enter national ID"
+        />
+        @if (getErrorMessage('nationalId')) {
+          <p class="mt-1 text-sm text-red-600">{{ getErrorMessage('nationalId') }}</p>
+        }
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Teacher Registration No
+        </label>
+        <input
+          type="text"
+          formControlName="teacherRegNo"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+          placeholder="Enter teacher registration number"
+        />
+        @if (getErrorMessage('teacherRegNo')) {
+          <p class="mt-1 text-sm text-red-600">{{ getErrorMessage('teacherRegNo') }}</p>
+        }
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Nationality <span class="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          formControlName="nationality"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+          placeholder="Enter nationality"
+        />
+        @if (getErrorMessage('nationality')) {
+          <p class="mt-1 text-sm text-red-600">{{ getErrorMessage('nationality') }}</p>
+        }
+      </div>
+    </div>
+
+    <!-- Contact Information -->
+    <div class="border-t pt-6">
+      <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Contact Information</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Country Code <span class="text-red-500">*</span>
+          </label>
+          <select
+            formControlName="countryCode"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+          >
+            @for (country of countryCodes; track country.code) {
+              <option [value]="country.code">{{ country.code }} ({{ country.name }})</option>
+            }
+          </select>
+          @if (getErrorMessage('countryCode')) {
+            <p class="mt-1 text-sm text-red-600">{{ getErrorMessage('countryCode') }}</p>
+          }
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Mobile Number <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="tel"
+            formControlName="mobileNumber"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+            placeholder="Enter mobile number"
+          />
+          @if (getErrorMessage('mobileNumber')) {
+            <p class="mt-1 text-sm text-red-600">{{ getErrorMessage('mobileNumber') }}</p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Address Information -->
+    <div class="border-t pt-6">
+      <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Address Information</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            District <span class="text-red-500">*</span>
+          </label>
+          <select
+            id="districtId"
+            formControlName="districtId"
+            (change)="onDistrictChange($event)"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+          >
+            <option value="">Select District</option>
+            @for (district of districts; track district.id) {
+              <option [value]="district.id">{{ district.name }}</option>
+            }
+          </select>
+          @if (getErrorMessage('districtId')) {
+            <p class="mt-1 text-sm text-red-600">{{ getErrorMessage('districtId') }}</p>
+          }
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            County
+          </label>
+          <select
+            id="countyId"
+            formControlName="countyId"
+            (change)="onCountyChange($event)"
+            [disabled]="!counties.length"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white disabled:bg-gray-100"
+          >
+            <option value="">Select County</option>
+            @for (county of counties; track county.id) {
+              <option [value]="county.id">{{ county.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Sub County
+          </label>
+          <select
+            id="subCountyId"
+            formControlName="subCountyId"
+            (change)="onSubCountyChange($event)"
+            [disabled]="!subCounties.length"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white disabled:bg-gray-100"
+          >
+            <option value="">Select Sub County</option>
+            @for (subCounty of subCounties; track subCounty.id) {
+              <option [value]="subCounty.id">{{ subCounty.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Parish
+          </label>
+          <select
+            formControlName="parishId"
+            [disabled]="!parishes.length"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white disabled:bg-gray-100"
+          >
+            <option value="">Select Parish</option>
+            @for (parish of parishes; track parish.id) {
+              <option [value]="parish.id">{{ parish.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Address Line 1 <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            formControlName="addressLine1"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+            placeholder="Enter address line 1"
+          />
+          @if (getErrorMessage('addressLine1')) {
+            <p class="mt-1 text-sm text-red-600">{{ getErrorMessage('addressLine1') }}</p>
+          }
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Address Line 2
+          </label>
+          <input
+            type="text"
+            formControlName="addressLine2"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+            placeholder="Enter address line 2 (optional)"
+          />
+          @if (getErrorMessage('addressLine2')) {
+            <p class="mt-1 text-sm text-red-600">{{ getErrorMessage('addressLine2') }}</p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="flex items-center justify-end gap-3 pt-6 border-t">
+      <button
+        type="button"
+        (click)="onCancel()"
+        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        [disabled]="isSubmitting || staffForm.invalid"
+        class="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 disabled:bg-brand-300"
+      >
+        @if (isSubmitting) {
+          <span class="inline-flex items-center">
+            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ isEditMode ? 'Updating...' : 'Creating...' }}
+          </span>
+        } @else {
+          {{ isEditMode ? 'Update Staff' : 'Create Staff' }}
+        }
+      </button>
+    </div>
+  </form>
+</div>
