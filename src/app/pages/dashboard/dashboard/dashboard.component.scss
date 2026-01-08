@@ -1,0 +1,50 @@
+/* Custom styles for the dashboard component to match the original HTML design */
+
+/* Custom scrollbar styling for better look in dashboard */
+:host ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+:host ::-webkit-scrollbar-track {
+  background: transparent; 
+}
+
+:host ::-webkit-scrollbar-thumb {
+  background: #cbd5e1; 
+  border-radius: 4px;
+}
+
+:host ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8; 
+}
+
+:host ::-webkit-scrollbar-thumb {
+  background: #475569; 
+}
+
+/* Ensure proper text color inheritance */
+:host {
+  display: block;
+  color: inherit;
+}
+
+/* Chart animation for hover effects */
+.group:hover .group-hover\:bg-primary-hover {
+  background-color: var(--tw-gradient-from, #0e4bce) !important;
+}
+
+/* Progress bar smooth transitions */
+.h-1\.5 {
+  transition: width 0.3s ease-in-out;
+}
+
+/* Activity feed scrollbar styling */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.dark .overflow-y-auto {
+  scrollbar-color: #475569 transparent;
+}

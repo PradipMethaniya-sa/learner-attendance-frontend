@@ -1,0 +1,119 @@
+/* Student List Component Styles */
+
+/* Custom scrollbar for better look in table */
+:host ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+:host ::-webkit-scrollbar-track {
+  background: transparent; 
+}
+
+:host ::-webkit-scrollbar-thumb {
+  background: #cbd5e1; 
+  border-radius: 4px;
+}
+
+:host ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8; 
+}
+
+.dark :host ::-webkit-scrollbar-thumb {
+  background: #475569; 
+}
+
+/* Ensure proper text color inheritance */
+:host {
+  display: block;
+  color: inherit;
+}
+
+/* Table hover effects */
+table tbody tr {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Action buttons hover states */
+.group:hover .group-hover\:opacity-100 {
+  opacity: 1 !important;
+}
+
+/* Avatar fallback styles */
+.size-9.rounded-full.bg-cover.bg-center.bg-gray-200 {
+  background-color: #e5e7eb;
+  background-size: cover;
+  background-position: center;
+}
+
+.dark .size-9.rounded-full.bg-cover.bg-center.bg-gray-200 {
+  background-color: #374151;
+}
+
+/* Guardian avatar stack */
+.flex.-space-x-2 {
+  position: relative;
+}
+
+.flex.-space-x-2 > * {
+  position: relative;
+  border: 2px solid white;
+}
+
+.dark .flex.-space-x-2 > * {
+  border-color: #1f2937;
+}
+
+/* Badge hover effects */
+.inline-flex.items-center.px-2\.5.py-0\.5.rounded-full {
+  transition: all 0.2s ease-in-out;
+}
+
+.inline-flex.items-center.px-2\.5.py-0\.5.rounded-full:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Button hover effects */
+button {
+  transition: all 0.2s ease-in-out;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+/* Search input focus effects */
+input[type="text"]:focus {
+  box-shadow: 0 0 0 3px rgba(70, 95, 255, 0.1);
+}
+
+/* Select dropdown styles */
+select {
+  transition: all 0.2s ease-in-out;
+}
+
+select:focus {
+  box-shadow: 0 0 0 3px rgba(70, 95, 255, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  table {
+    font-size: 12px;
+  }
+  
+  .px-6 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .py-4 {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+}

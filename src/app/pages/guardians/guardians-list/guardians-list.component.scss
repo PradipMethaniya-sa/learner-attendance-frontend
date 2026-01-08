@@ -1,0 +1,184 @@
+/* Guardians List Component Styles */
+
+/* Custom scrollbar for better look in table */
+:host ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+:host ::-webkit-scrollbar-track {
+  background: transparent; 
+}
+
+:host ::-webkit-scrollbar-thumb {
+  background: #cbd5e1; 
+  border-radius: 4px;
+}
+
+:host ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8; 
+}
+
+.dark :host ::-webkit-scrollbar-thumb {
+  background: #475569; 
+}
+
+/* Ensure proper text color inheritance */
+:host {
+  display: block;
+  color: inherit;
+}
+
+/* Search form styles */
+form {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Input field focus effects */
+input[type="text"],
+input[type="email"],
+input[type="tel"] {
+  transition: all 0.2s ease-in-out;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="tel"]:focus {
+  box-shadow: 0 0 0 3px rgba(70, 95, 255, 0.1);
+}
+
+/* Table hover effects */
+table tbody tr {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Avatar initials styles */
+.h-8.w-8.rounded-full {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Badge hover effects */
+.inline-flex.items-center.px-2\.5.py-0\.5.rounded-full {
+  transition: all 0.2s ease-in-out;
+}
+
+.inline-flex.items-center.px-2\.5.py-0\.5.rounded-full:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Button hover effects */
+button {
+  transition: all 0.2s ease-in-out;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Search results animation */
+.flex.flex-col.gap-4 {
+  animation: slideUp 0.3s ease-in-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  table {
+    font-size: 12px;
+  }
+  
+  .px-6 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .py-4 {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+  
+  .grid.grid-cols-1.md\:grid-cols-3 {
+    gap: 1rem;
+  }
+  
+  h1 {
+    font-size: 1.875rem;
+  }
+}
+
+/* Dark mode specific adjustments */
+.dark .bg-gray-50 {
+  background-color: #1f2937;
+}
+
+.dark .border-gray-200 {
+  border-color: #374151;
+}
+
+/* Focus ring styles for accessibility */
+.focus\:ring-2:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(70, 95, 255, 0.5);
+}
+
+/* Loading state for search */
+.loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}

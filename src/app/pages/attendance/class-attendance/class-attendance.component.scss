@@ -1,0 +1,274 @@
+/* Class Attendance Component Styles */
+
+/* Custom scrollbar for better look in table */
+:host ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+:host ::-webkit-scrollbar-track {
+  background: transparent; 
+}
+
+:host ::-webkit-scrollbar-thumb {
+  background: #cbd5e1; 
+  border-radius: 4px;
+}
+
+:host ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8; 
+}
+
+.dark :host ::-webkit-scrollbar-thumb {
+  background: #475569; 
+}
+
+/* Ensure proper text color inheritance */
+:host {
+  display: block;
+  color: inherit;
+}
+
+/* Expandable row animations */
+tr {
+  transition: all 0.2s ease-in-out;
+}
+
+tr.bg-blue-50\/50 {
+  animation: highlightRow 0.3s ease-in-out;
+}
+
+@keyframes highlightRow {
+  from {
+    background-color: transparent;
+  }
+  to {
+    background-color: rgba(59, 130, 246, 0.05);
+  }
+}
+
+/* Expanded details animation */
+.px-0.py-0.border-b {
+  animation: slideDown 0.3s ease-in-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+  }
+}
+
+/* Status badge animations */
+.inline-flex.items-center.gap-1.px-2\.5.py-0\.5.rounded-full {
+  transition: all 0.2s ease-in-out;
+}
+
+.inline-flex.items-center.gap-1.px-2\.5.py-0\.5.rounded-full:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Summary cards hover effects */
+.bg-white.dark\:bg-gray-800.p-5.rounded-xl {
+  transition: all 0.2s ease-in-out;
+}
+
+.bg-white.dark\:bg-gray-800.p-5.rounded-xl:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Progress bar animations */
+.w-full.bg-gray-100.dark\:bg-gray-700.rounded-full.h-1\.5 {
+  overflow: hidden;
+}
+
+.bg-brand-500.h-1\.5.rounded-full {
+  transition: width 0.8s ease-in-out;
+  animation: progressPulse 2s ease-in-out infinite;
+}
+
+@keyframes progressPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Button hover effects */
+button {
+  transition: all 0.2s ease-in-out;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+/* Filter panel animations */
+.bg-white.dark\:bg-gray-800.rounded-xl.border.border-gray-200 {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Input focus effects */
+input[type="text"],
+select {
+  transition: all 0.2s ease-in-out;
+}
+
+input[type="text"]:focus,
+select:focus {
+  box-shadow: 0 0 0 3px rgba(70, 95, 255, 0.1);
+}
+
+/* Table row hover effects */
+table tbody tr {
+  transition: all 0.2s ease-in-out;
+}
+
+table tbody tr:hover {
+  background-color: rgba(249, 250, 251, 0.5);
+}
+
+.dark table tbody tr:hover {
+  background-color: rgba(31, 41, 55, 0.5);
+}
+
+/* Avatar fallback styles */
+.size-8.rounded-full.bg-cover {
+  background-color: #e5e7eb;
+  background-size: cover;
+  background-position: center;
+}
+
+.dark .size-8.rounded-full.bg-cover {
+  background-color: #374151;
+}
+
+/* Sync status indicator */
+.text-green-500 .material-symbols-outlined {
+  animation: syncPulse 2s ease-in-out infinite;
+}
+
+@keyframes syncPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Expand/collapse button */
+.size-6.rounded {
+  transition: all 0.2s ease-in-out;
+}
+
+.size-6.rounded:hover {
+  background-color: rgba(156, 163, 175, 0.2);
+}
+
+.dark .size-6.rounded:hover {
+  background-color: rgba(75, 85, 99, 0.4);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  table {
+    font-size: 12px;
+  }
+  
+  .px-6 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .py-4 {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+  
+  .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
+    gap: 1rem;
+  }
+  
+  h1 {
+    font-size: 1.875rem;
+  }
+  
+  .p-6 {
+    padding: 1rem;
+  }
+}
+
+/* Status-specific colors */
+.text-green-600 {
+  color: #059669;
+}
+
+.text-red-500 {
+  color: #ef4444;
+}
+
+.text-orange-500 {
+  color: #f97316;
+}
+
+.dark .text-green-600 {
+  color: #34d399;
+}
+
+.dark .text-red-500 {
+  color: #f87171;
+}
+
+.dark .text-orange-500 {
+  color: #fb923c;
+}
+
+/* Loading state */
+.loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}

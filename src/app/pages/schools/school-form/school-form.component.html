@@ -1,0 +1,309 @@
+<div class="p-6">
+  <!-- Form Header -->
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+      {{ isEditMode ? 'Edit School' : 'Add New School' }}
+    </h2>
+    <button 
+      (click)="onCancel()"
+      class="flex h-9.5 w-9.5 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+      title="Close"
+    >
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M6.04289 16.5413C5.65237 16.9318 5.65237 17.565 6.04289 17.9555C6.43342 18.346 7.06658 18.346 7.45711 17.9555L11.9987 13.4139L16.5408 17.956C16.9313 18.3466 17.5645 18.3466 17.955 17.956C18.3455 17.5655 18.3455 16.9323 17.955 16.5418L13.4129 11.9997L17.955 7.4576C18.3455 7.06707 18.3455 6.43391 17.955 6.04338C17.5645 5.65286 16.9313 5.65286 16.5408 6.04338L11.9987 10.5855L7.45711 6.0439C7.06658 5.65338 6.43342 5.65338 6.04289 6.0439C5.65237 6.43442 5.65237 7.06759 6.04289 7.45811L10.5845 11.9997L6.04289 16.5413Z"
+          fill="currentColor"
+        />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Error Message -->
+  @if (error) {
+    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+      <div class="flex items-center">
+        <span class="material-symbols-outlined text-red-600 dark:text-red-400 mr-2">error</span>
+        <span class="text-red-800 dark:text-red-200">{{ error }}</span>
+      </div>
+    </div>
+  }
+
+  <!-- School Form -->
+  <form [formGroup]="schoolForm" (ngSubmit)="onSubmit()">
+    <div class="space-y-6">
+      <!-- Basic Information -->
+      <div>
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Basic Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- School Name -->
+          <div>
+            <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              School Name <span class="text-red-500">*</span>
+            </label>
+            <input
+              id="name"
+              formControlName="name"
+              type="text"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+              placeholder="Enter school name"
+            />
+            @if (getErrorMessage('name')) {
+              <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getErrorMessage('name') }}</p>
+            }
+          </div>
+
+          <!-- Registration Number -->
+          <div>
+            <label for="registrationNo" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Registration Number <span class="text-red-500">*</span>
+            </label>
+            <input
+              id="registrationNo"
+              formControlName="registrationNo"
+              type="text"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+              placeholder="Enter registration number"
+            />
+            @if (getErrorMessage('registrationNo')) {
+              <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getErrorMessage('registrationNo') }}</p>
+            }
+          </div>
+
+          <!-- Email -->
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Email Address <span class="text-red-500">*</span>
+            </label>
+            <input
+              id="email"
+              formControlName="email"
+              type="email"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+              placeholder="school@example.com"
+            />
+            @if (getErrorMessage('email')) {
+              <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getErrorMessage('email') }}</p>
+            }
+          </div>
+
+          <!-- Website -->
+          <div>
+            <label for="website" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Website
+            </label>
+            <input
+              id="website"
+              formControlName="website"
+              type="url"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+              placeholder="https://www.schoolwebsite.com"
+            />
+            @if (getErrorMessage('website')) {
+              <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getErrorMessage('website') }}</p>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Information -->
+      <div>
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Contact Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Mobile Number -->
+          <div>
+            <label for="mobileNo" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Mobile Number <span class="text-red-500">*</span>
+            </label>
+            <div class="flex gap-2">
+              <select
+                formControlName="countryCode"
+                class="flex-shrink-0 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+              >
+                @for (country of countryCodes; track country.code) {
+                  <option [value]="country.code">{{ country.code }} ({{ country.name }})</option>
+                }
+              </select>
+              <input
+                id="mobileNo"
+                formControlName="mobileNo"
+                type="tel"
+                class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                placeholder="1234567890"
+              />
+            </div>
+            @if (getErrorMessage('mobileNo')) {
+              <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getErrorMessage('mobileNo') }}</p>
+            }
+          </div>
+
+          <!-- Logo URL -->
+          <div>
+            <label for="logoUrl" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Logo URL
+            </label>
+            <input
+              id="logoUrl"
+              formControlName="logoUrl"
+              type="url"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+              placeholder="https://example.com/logo.png"
+            />
+            @if (getErrorMessage('logoUrl')) {
+              <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getErrorMessage('logoUrl') }}</p>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Address Information -->
+      <div>
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Address Information</h3>
+        <div class="space-y-4">
+          <!-- Address Line 1 -->
+          <div>
+            <label for="addressLine1" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Address Line 1 <span class="text-red-500">*</span>
+            </label>
+            <input
+              id="addressLine1"
+              formControlName="addressLine1"
+              type="text"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+              placeholder="Street address"
+            />
+            @if (getErrorMessage('addressLine1')) {
+              <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getErrorMessage('addressLine1') }}</p>
+            }
+          </div>
+
+          <!-- Address Line 2 -->
+          <div>
+            <label for="addressLine2" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Address Line 2
+            </label>
+            <input
+              id="addressLine2"
+              formControlName="addressLine2"
+              type="text"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+              placeholder="Apartment, suite, etc. (optional)"
+            />
+            @if (getErrorMessage('addressLine2')) {
+              <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getErrorMessage('addressLine2') }}</p>
+            }
+          </div>
+
+          <!-- Parish Selection with Location Hierarchy -->
+          <div class="space-y-4">
+            <!-- District -->
+            <div>
+              <label for="districtId" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                District <span class="text-red-500">*</span>
+              </label>
+              <select
+                id="districtId"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                (change)="onDistrictChange($event)"
+              >
+                <option value="">Select a district</option>
+                @for (district of districts; track district.id) {
+                  <option [value]="district.id">{{ district.name }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- County -->
+            <div>
+              <label for="countyId" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                County <span class="text-red-500">*</span>
+              </label>
+              <select
+                id="countyId"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                (change)="onCountyChange($event)"
+                [disabled]="!districts.length"
+              >
+                <option value="">Select a county</option>
+                @for (county of counties; track county.id) {
+                  <option [value]="county.id">{{ county.name }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- SubCounty -->
+            <div>
+              <label for="subCountyId" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Sub County <span class="text-red-500">*</span>
+              </label>
+              <select
+                id="subCountyId"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                (change)="onSubCountyChange($event)"
+                [disabled]="!counties.length"
+              >
+                <option value="">Select a sub county</option>
+                @for (subCounty of subCounties; track subCounty.id) {
+                  <option [value]="subCounty.id">{{ subCounty.name }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Parish -->
+            <div>
+              <label for="parishId" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Parish <span class="text-red-500">*</span>
+              </label>
+              <select
+                id="parishId"
+                formControlName="parishId"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                [disabled]="!subCounties.length"
+              >
+                <option value="">Select a parish</option>
+                @for (parish of parishes; track parish.id) {
+                  <option [value]="parish.id">{{ parish.name }}</option>
+                }
+              </select>
+              @if (getErrorMessage('parishId')) {
+                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getErrorMessage('parishId') }}</p>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+      <button
+        type="button"
+        (click)="onCancel()"
+        class="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-3 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 transition hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03] dark:hover:text-gray-300"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        [disabled]="isSubmitting || schoolForm.invalid"
+        class="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 disabled:bg-brand-300"
+      >
+        @if (isSubmitting) {
+          <div class="flex items-center">
+            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+            {{ isEditMode ? 'Updating...' : 'Creating...' }}
+          </div>
+        } @else {
+          {{ isEditMode ? 'Update School' : 'Create School' }}
+        }
+      </button>
+    </div>
+  </form>
+</div>

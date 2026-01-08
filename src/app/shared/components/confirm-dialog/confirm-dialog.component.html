@@ -1,0 +1,41 @@
+<div class="fixed inset-0 flex items-center justify-center overflow-y-auto modal z-99999">
+  <!-- Backdrop -->
+  <div class="fixed inset-0 h-full w-full bg-gray-400/50" (click)="onCancel()"></div>
+
+  <!-- Modal Content -->
+  <div class="relative w-full rounded-3xl bg-white dark:bg-gray-900 max-w-md mx-4">
+    <div class="p-6">
+      <!-- Icon and Title -->
+      <div class="flex items-center mb-4">
+        <span class="material-symbols-outlined text-[24px] mr-3" [class]="getIconClass()">
+          {{ getIconName() }}
+        </span>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          {{ data.title }}
+        </h3>
+      </div>
+
+      <!-- Message -->
+      <p class="text-gray-600 dark:text-gray-300 mb-6">
+        {{ data.message }}
+      </p>
+
+      <!-- Actions -->
+      <div class="flex justify-end gap-3">
+        <button
+          (click)="onCancel()"
+          class="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-3 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 transition hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03] dark:hover:text-gray-300"
+        >
+          {{ data.cancelText }}
+        </button>
+        <button
+          (click)="onConfirm()"
+          class="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-white transition"
+          [class]="getConfirmButtonClass()"
+        >
+          {{ data.confirmText }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,81 @@
+@if (pagination ) {
+  <div class="border-t border-gray-200 dark:border-gray-700 px-6 py-4">
+    <div class="flex items-center justify-between gap-4">
+      <div class="flex items-center gap-4 text-sm text-gray-700 dark:text-gray-300 flex-shrink-0">
+        <div class="flex items-center gap-2">
+          <label for="pageSize" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Show
+          </label>
+          <select 
+            id="pageSize"
+            [(ngModel)]="selectedLimit"
+            (change)="onLimitChange(selectedLimit)"
+            class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:focus:border-brand-400"
+          >
+            @for (option of pageSizeOptions; track option) {
+              <option [value]="option.toString()">{{ option }}</option>
+            }
+          </select>
+          <span class="text-sm text-gray-700 dark:text-gray-300">per page</span>
+        </div>
+      </div>
+      
+      <div class="flex items-center">
+        <nav class="flex items-center gap-1" role="navigation" aria-label="Pagination">
+          <button 
+            (click)="onPageChange(1)"
+            [disabled]="!pagination.hasPrevious"
+            class="inline-flex items-center justify-center w-8 h-8 text-gray-500 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+            title="First page"
+            aria-label="First page"
+          >
+            <span class="material-symbols-outlined text-[18px]">first_page</span>
+          </button>
+          
+          <button 
+            (click)="onPageChange(pagination.page - 1)"
+            [disabled]="!pagination.hasPrevious"
+            class="inline-flex items-center justify-center w-8 h-8 text-gray-500 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+            title="Previous page"
+            aria-label="Previous page"
+          >
+            <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+          </button>
+          
+          @for (page of paginationButtons; track page) {
+            <button 
+              (click)="onPageChange(page)"
+              [class]="page === pagination.page ? 
+                'inline-flex items-center justify-center w-8 h-8 text-sm font-medium text-white bg-brand-500 rounded-lg shadow-theme-xs' : 
+                'inline-flex items-center justify-center w-8 h-8 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'"
+              [attr.aria-label]="page === pagination.page ? 'Current page, page ' + page : 'Go to page ' + page"
+              [attr.aria-current]="page === pagination.page ? 'page' : null"
+            >
+              {{ page }}
+            </button>
+          }
+          
+          <button 
+            (click)="onPageChange(pagination.page + 1)"
+            [disabled]="!pagination.hasNext"
+            class="inline-flex items-center justify-center w-8 h-8 text-gray-500 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+            title="Next page"
+            aria-label="Next page"
+          >
+            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+          </button>
+          
+          <button 
+            (click)="onPageChange(pagination.totalPages)"
+            [disabled]="!pagination.hasNext"
+            class="inline-flex items-center justify-center w-8 h-8 text-gray-500 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+            title="Last page"
+            aria-label="Last page"
+          >
+            <span class="material-symbols-outlined text-[18px]">last_page</span>
+          </button>
+        </nav>
+      </div>
+    </div>
+  </div>
+}

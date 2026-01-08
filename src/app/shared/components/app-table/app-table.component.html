@@ -1,0 +1,102 @@
+<div class="w-full">
+  <!-- Search Bar -->
+  <div class="w-full bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 mb-6">
+    <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div class="relative w-full md:max-w-md">
+        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+          <span class="material-symbols-outlined text-gray-400">search</span>
+        </div>
+        <input 
+          (input)="onSearchInput($event)"
+          [value]="searchQuery"
+          class="block w-full p-2.5 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-brand-500 focus:border-brand-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-brand-500 dark:focus:border-brand-500" 
+          placeholder="Search..." 
+          type="text"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading) {
+    <div class="flex items-center justify-center py-12">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
+      <span class="ml-2 text-gray-600 dark:text-gray-400">Loading...</span>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!loading && data.length === 0) {
+    <div class="text-center py-12">
+      <span class="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">table_chart</span>
+      <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No data found</h3>
+      <p class="text-gray-500 dark:text-gray-400">No records match your search criteria.</p>
+    </div>
+  }
+
+  <!-- Table -->
+  @if (!loading && data.length > 0) {
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+          <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
+            <tr>
+              @for (column of columns; track column.key) {
+                <th class="px-6 py-4 font-semibold" scope="col">
+                  @if (column.actions) {
+                    <span class="text-right">Actions</span>
+                  } @else if (column.sortable) {
+                    <button 
+                      (click)="onSortClick(column)" 
+                      class="flex items-center gap-1 hover:text-brand-500 transition-colors"
+                      type="button"
+                    >
+                      {{ column.label }}
+                      <span class="material-symbols-outlined text-[16px]">{{ getSortIcon(column.key) }}</span>
+                    </button>
+                  } @else {
+                    {{ column.label }}
+                  }
+                </th>
+              }
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+            @for (row of data; track row.id) {
+              <tr class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                @for (column of columns; track column.key) {
+                  <td class="px-6 py-4">
+                    @if (column.actions) {
+                      <div class="flex items-center justify-end gap-2">
+                        @for (action of actions; track action.key) {
+                          <button 
+                            (click)="onActionClick(action, row)"
+                            [disabled]="action.disabled && action.disabled(row)"
+                            [attr.title]="action.getTitle ? action.getTitle(row) : (action.title || action.label)"
+                            class="p-1.5 text-gray-500 hover:text-brand-500 hover:bg-brand-500/10 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed {{ action.class || '' }}"
+                            type="button"
+                          >
+                            <span class="material-symbols-outlined text-[20px]">{{ action.getIcon ? action.getIcon(row) : action.icon }}</span>
+                          </button>
+                        }
+                      </div>
+                    } @else {
+                      {{ getCellValue(row, column.key) }}
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination using existing component -->
+    <app-pagination 
+      [pagination]="pagination" 
+      (pageChange)="pageChange.emit($event)"
+      (limitChange)="limitChange.emit($event)">
+    </app-pagination>
+  </div>
+}
+</div>
