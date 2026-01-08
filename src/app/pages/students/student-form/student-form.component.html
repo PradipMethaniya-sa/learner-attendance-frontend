@@ -183,7 +183,7 @@
               class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 focus:border-brand-500 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-brand-500 dark:focus:ring-brand-500"
             >
               @for (category of orphanCategories; track category.value) {
-                <option [value]="category.value">{{ category.label }}</option>
+                <option [value]="category.value">{{ category.displayName }}</option>
               }
             </select>
             @if (getErrorMessage('orphanCategory')) {

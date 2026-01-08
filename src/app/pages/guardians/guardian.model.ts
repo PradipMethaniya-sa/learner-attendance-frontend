@@ -1,20 +1,16 @@
-export interface Student {
+export interface Guardian {
   id: string;
-  studentUid: string;
-  generalUserId: string;
+  guardianUid: string;
+  generalUserInfoId: string;
   schoolId: string;
   firstName: string;
   lastName: string;
   email: string;
   countryCode: string;
   mobileNumber: string;
+  nationalId: string;
   gender: 'MALE' | 'FEMALE' | 'OTHER';
-  dob: string;
-  hasSpecialNeeds: boolean;
-  orphanCategory: 'NONE' | 'SINGLE_ORPHAN' | 'DOUBLE_ORPHAN';
-  avatarUrl: string | null;
-  status: 'ACTIVE' | 'INACTIVE';
-  guardians: any[];
+  dob: string | null;
   addressLine1: string;
   addressLine2: string;
   districtId: string;
@@ -22,21 +18,22 @@ export interface Student {
   subCountyId: string;
   parishId: string;
   nationality: string;
-  createdAt: string;
-  updatedAt: string;
+  avatarUrl: string | null;
+  status: 'ACTIVE' | 'INACTIVE';
+  createdAt: string | null;
+  updatedAt: string | null;
 }
 
-export interface StudentFilters {
+export interface GuardianFilters {
   search?: string;
   status?: 'ACTIVE' | 'INACTIVE';
-  gender?: 'MALE' | 'FEMALE' | 'OTHER';
   page?: number;
   limit?: number;
   sortBy?: string;
   orderBy?: 'asc' | 'desc';
 }
 
-export interface StudentPagination {
+export interface GuardianPagination {
   page: number;
   limit: number;
   totalElements: number;
@@ -48,41 +45,37 @@ export interface StudentPagination {
   numberOfElements: number;
 }
 
-export interface StudentCreateRequest {
+export interface GuardianCreateRequest {
   firstName: string;
   lastName: string;
   email: string;
   countryCode: string;
   mobileNumber: string;
+  nationalId: string;
   gender: 'MALE' | 'FEMALE' | 'OTHER';
-  dob: string;
-  hasSpecialNeeds: boolean;
   addressLine1: string;
   addressLine2?: string;
   districtId: string;
   countyId: string;
   subCountyId: string;
   parishId: string;
-  orphanCategory: 'NONE' | 'SINGLE_ORPHAN' | 'DOUBLE_ORPHAN';
   nationality: string;
 }
 
-export interface StudentUpdateRequest {
+export interface GuardianUpdateRequest {
   firstName: string;
   lastName: string;
   email: string;
   countryCode: string;
   mobileNumber: string;
+  nationalId: string;
   gender: 'MALE' | 'FEMALE' | 'OTHER';
-  dob: string;
-  hasSpecialNeeds: boolean;
   addressLine1: string;
   addressLine2?: string;
   districtId: string;
   countyId: string;
   subCountyId: string;
   parishId: string;
-  orphanCategory: 'NONE' | 'SINGLE_ORPHAN' | 'DOUBLE_ORPHAN';
   nationality: string;
 }
 
@@ -94,12 +87,7 @@ export interface ApiResponse<T> {
   traceId: string;
 }
 
-export interface StudentListResponse {
-  students: Student[];
-  pagination: StudentPagination;
-}
-
-export interface OrphanCategory {
-  value: string;
-  displayName: string;
+export interface GuardianListResponse {
+  guardians: Guardian[];
+  pagination: GuardianPagination;
 }
