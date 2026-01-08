@@ -21,11 +21,32 @@ export class AuthInterceptor implements HttpInterceptor {
     console.log('AuthInterceptor running:', request.url);
     console.log('Token:', token);
 
+    // Prepare headers
+    const headers: { [key: string]: string } = {};
+
     if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    // Add required headers for all API requests if they exist in localStorage
+    const schoolId = localStorage.getItem('school_id');
+    const termId = localStorage.getItem('term_id');
+    const yearId = localStorage.getItem('year_id');
+
+    if (schoolId) {
+      headers['x-school-id'] = schoolId;
+    }
+    if (termId) {
+      headers['x-academic-term-id'] = termId;
+    }
+    if (yearId) {
+      headers['x-academic-year-id'] = yearId;
+    }
+
+    // Clone request with all headers
+    if (Object.keys(headers).length > 0) {
       request = request.clone({
-        setHeaders: {
-          Authorization: `Bearer ${token}`
-        }
+        setHeaders: headers
       });
     }
 

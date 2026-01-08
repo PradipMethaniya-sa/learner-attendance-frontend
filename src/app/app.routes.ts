@@ -25,6 +25,7 @@ import { StudentsAttendanceComponent } from './pages/attendance/students-attenda
 import { AuthGuard } from './shared/guards/auth.guard';
 import { NoAuthGuard } from './shared/guards/no-auth.guard';
 import { SchoolListComponent } from './pages/schools/school-list/school-list.component';
+import { ClassListComponent } from './pages/classes/class-list/class-list.component';
 
 export const routes: Routes = [
   {
@@ -137,6 +138,11 @@ export const routes: Routes = [
         path:'schools',
         component:SchoolListComponent,
         title:'Schools | TailAdmin - Angular Admin Dashboard Template'
+      },
+      {
+        path:'classes',
+        component:ClassListComponent,
+        title:'Classes | TailAdmin - Angular Admin Dashboard Template'
       },
     ]
   },
