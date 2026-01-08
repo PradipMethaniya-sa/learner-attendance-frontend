@@ -49,9 +49,9 @@ export class AppSidebarComponent {
       path: "/guardians",
     },
     {
-      icon: `<span class="material-symbols-outlined" style="font-size: 24px;">school</span>`,
-      name: "Teachers",
-      path: "/teachers",
+      icon: `<span class="material-symbols-outlined" style="font-size: 24px;">badge</span>`,
+      name: "Staff",
+      path: "/staff",
     },
     {
       icon: `<span class="material-symbols-outlined" style="font-size: 24px;">class</span>`,

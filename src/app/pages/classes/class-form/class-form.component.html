@@ -1,0 +1,126 @@
+<div class="p-6 sm:p-8">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-7">
+    <div>
+      <h3 class="text-xl font-semibold text-gray-800 dark:text-white">
+        {{ isEditMode ? 'Edit Class' : 'Add New Class' }}
+      </h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        {{ isEditMode ? 'Update class information' : 'Create a new class or stream' }}
+      </p>
+    </div>
+    <button 
+      type="button" 
+      (click)="onCancel()" 
+      class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+    >
+      <span class="material-symbols-outlined text-2xl">close</span>
+    </button>
+  </div>
+
+  <!-- Form -->
+  <form [formGroup]="classForm" (ngSubmit)="onSubmit()">
+    <div class="grid grid-cols-1 gap-6">
+      <!-- Class Type Selection -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Type
+        </label>
+        <div class="flex gap-4">
+          <label class="flex items-center">
+            <input 
+              type="radio" 
+              name="classType" 
+              value="class" 
+              [checked]="!isStream"
+              (change)="onClassTypeChange($event)"
+              class="mr-2"
+            >
+            <span class="text-sm text-gray-700 dark:text-gray-300">Class</span>
+          </label>
+          <label class="flex items-center">
+            <input 
+              type="radio" 
+              name="classType" 
+              value="stream" 
+              [checked]="isStream"
+              (change)="onClassTypeChange($event)"
+              class="mr-2"
+            >
+            <span class="text-sm text-gray-700 dark:text-gray-300">Stream</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Class Name -->
+      <div>
+        <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          {{ isStream ? 'Stream Name' : 'Class Name' }} <span class="text-red-500">*</span>
+        </label>
+        <input 
+          type="text" 
+          id="name" 
+          formControlName="name"
+          class="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-500 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-brand-400"
+          [placeholder]="isStream ? 'e.g., A, B, C' : 'e.g., Grade 1, Std 2'"
+        >
+        @if (getErrorMessage('name')) {
+          <p class="mt-1 text-sm text-red-500">{{ getErrorMessage('name') }}</p>
+        }
+      </div>
+
+      <!-- Parent Class (for streams) -->
+      @if (isStream) {
+        <div>
+          <label for="classId" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Parent Class <span class="text-red-500">*</span>
+          </label>
+          <select 
+            id="classId" 
+            formControlName="classId"
+            class="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-500 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-brand-400"
+          >
+            <option value="">Select Parent Class</option>
+            @for (parentClass of parentClasses; track parentClass.id) {
+              <option [value]="parentClass.id">{{ parentClass.name }}</option>
+            }
+          </select>
+          @if (getErrorMessage('classId')) {
+            <p class="mt-1 text-sm text-red-500">{{ getErrorMessage('classId') }}</p>
+          }
+        </div>
+      }
+
+      <!-- Error Message -->
+      @if (error) {
+        <div class="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
+          <p class="text-sm text-red-600 dark:text-red-400">{{ error }}</p>
+        </div>
+      }
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center justify-end gap-3 mt-6">
+      <button 
+        type="button" 
+        (click)="onCancel()"
+        class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 disabled:bg-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+      >
+        Cancel
+      </button>
+      <button 
+        type="submit" 
+        [disabled]="isSubmitting"
+        class="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300"
+      >
+        @if (isSubmitting) {
+          <span class="material-symbols-outlined animate-spin text-[18px]">refresh</span>
+          {{ isEditMode ? 'Updating...' : 'Creating...' }}
+        } @else {
+          <span class="material-symbols-outlined text-[18px]">save</span>
+          {{ isEditMode ? 'Update Class' : 'Create Class' }}
+        }
+      </button>
+    </div>
+  </form>
+</div>

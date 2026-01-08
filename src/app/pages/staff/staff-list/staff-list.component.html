@@ -1,0 +1,56 @@
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+  <div>
+    <h1 class="text-2xl font-semibold text-gray-900 dark:text-white tracking-tight">Staff</h1>
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage staff records, personal details, and status.</p>
+  </div>
+  <div class="flex items-center gap-3">
+    <button (click)="addNewStaff()" class="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 disabled:bg-brand-300">
+      <span class="material-symbols-outlined text-[18px]">add</span>
+      Add New Staff
+    </button>
+  </div>
+</div>
+
+<app-table
+  [columns]="columns"
+  [data]="staffs"
+  [page]="page"
+  [limit]="limit"
+  [total]="total"
+  [loading]="loading"
+  [searchQuery]="searchForm.value.search || ''"
+  [currentSort]="{ field: currentSortBy, order: currentOrderBy }"
+  [pagination]="pagination"
+  [actions]="tableActions"
+  (searchChange)="onSearch($event)"
+  (sortChange)="onSort($event)"
+  (pageChange)="onPageChange($event)"
+  (limitChange)="onLimitChange($event)"
+  (actionClick)="onTableAction($event)"
+></app-table>
+
+<!-- Staff Form Modal -->
+@if (showStaffForm) {
+  <div class="fixed inset-0 flex items-center justify-center overflow-y-auto modal z-99999">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 h-full w-full bg-gray-400/50" (click)="onStaffFormClose()"></div>
+
+    <!-- Modal Content -->
+    <div class="relative w-full rounded-3xl bg-white dark:bg-gray-900 max-w-4xl max-h-[90vh] overflow-y-auto">
+      <app-staff-form
+        [staff]="selectedStaff"
+        (close)="onStaffFormClose()"
+        (success)="onStaffFormSuccess()"
+      ></app-staff-form>
+    </div>
+  </div>
+}
+
+<!-- Confirmation Dialog -->
+@if (showConfirmDialog) {
+  <app-confirm-dialog
+    [data]="confirmDialogData"
+    (confirm)="onConfirmDialog()"
+    (cancel)="closeConfirmDialog()"
+  ></app-confirm-dialog>
+}
