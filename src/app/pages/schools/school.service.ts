@@ -7,10 +7,13 @@ import {
   SchoolFilters,
   SchoolCreateRequest,
   SchoolUpdateRequest,
+  SchoolCreateWithFileRequest,
+  SchoolUpdateWithFileRequest,
   ApiResponse,
   SchoolListResponse
 } from './school.model';
 import { FilterService, FilterItem } from '../../shared/services/filter.service';
+import { FileUploadService, FileUploadProgress } from '../../shared/services/file-upload.service';
 
 @Injectable({
   providedIn: 'root'
@@ -18,7 +21,10 @@ import { FilterService, FilterItem } from '../../shared/services/filter.service'
 export class SchoolService {
   private readonly apiUrl = environment.API_URL || 'http://localhost:5050';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private fileUploadService: FileUploadService
+  ) {}
 
   getSchools(filters: SchoolFilters = {}): Observable<ApiResponse<SchoolListResponse>> {
     let params = new HttpParams();
@@ -87,5 +93,33 @@ export class SchoolService {
     }
 
     return this.http.get<ApiResponse<SchoolListResponse>>(`${this.apiUrl}/schools`, { params });
+  }
+
+  // File upload methods
+  createSchoolWithLogo(
+    school: SchoolCreateWithFileRequest,
+    logoFile: File,
+    onProgress?: (progress: FileUploadProgress) => void
+  ): Observable<ApiResponse<School>> {
+    return this.fileUploadService.uploadWithJson<School>(
+      '/schools',
+      school,
+      { logo: logoFile },
+      onProgress
+    );
+  }
+
+  updateSchoolWithLogo(
+    id: string,
+    school: SchoolUpdateWithFileRequest,
+    logoFile: File,
+    onProgress?: (progress: FileUploadProgress) => void
+  ): Observable<ApiResponse<School>> {
+    return this.fileUploadService.updateWithJson<School>(
+      `/schools/${id}`,
+      school,
+      { logo: logoFile },
+      onProgress
+    );
   }
 }

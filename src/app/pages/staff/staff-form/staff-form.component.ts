@@ -1,9 +1,10 @@
-import { Component, OnInit, OnDestroy, Output, EventEmitter, Input, OnChanges } from '@angular/core';
+import { Component, OnInit, OnDestroy, Output, EventEmitter, Input, OnChanges, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { StaffService } from '../staff.service';
 import { Staff, StaffCreateRequest, StaffUpdateRequest } from '../staff.model';
 import { FilterService, FilterItem } from '../../../shared/services/filter.service';
+import { FileUploadService } from '../../../shared/services/file-upload.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
@@ -23,6 +24,11 @@ export class StaffFormComponent implements OnInit, OnDestroy, OnChanges {
   isSubmitting = false;
   error: string | null = null;
   selectedStaff: Staff | null = null;
+
+  // Image upload properties
+  selectedImageFile: File | null = null;
+  imagePreviewUrl: string | null = null;
+  uploadProgress: number | null = null;
 
   @Input() staff: Staff | null = null;
   @Output() close = new EventEmitter<void>();
@@ -47,7 +53,9 @@ export class StaffFormComponent implements OnInit, OnDestroy, OnChanges {
     private fb: FormBuilder,
     private staffService: StaffService,
     private filterService: FilterService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private fileUploadService: FileUploadService,
+    private cdr: ChangeDetectorRef
   ) {
     this.staffForm = this.createStaffForm();
   }
@@ -68,11 +76,6 @@ export class StaffFormComponent implements OnInit, OnDestroy, OnChanges {
         this.resetForm();
       }
     }
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   private createStaffForm(): FormGroup {
@@ -303,18 +306,44 @@ export class StaffFormComponent implements OnInit, OnDestroy, OnChanges {
         teacherRegNo: formData.teacherRegNo || undefined
       };
 
-      this.staffService.updateStaff(this.selectedStaff.id, updateRequest)
+      // Use image upload method if image is selected
+      if (this.selectedImageFile) {
+        this.staffService.updateStaffWithImages(
+          this.selectedStaff.id,
+          updateRequest,
+          this.selectedImageFile,
+          (progress) => {
+            this.uploadProgress = progress.percentage;
+          }
+        )
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
             this.isSubmitting = false;
+            this.uploadProgress = null;
             this.onFormSuccess(response.message);
           },
           error: (error) => {
             this.error = error.message;
             this.isSubmitting = false;
+            this.uploadProgress = null;
           }
         });
+      } else {
+        // Use regular update if no image
+        this.staffService.updateStaff(this.selectedStaff.id, updateRequest)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (response) => {
+              this.isSubmitting = false;
+              this.onFormSuccess(response.message);
+            },
+            error: (error) => {
+              this.error = error.message;
+              this.isSubmitting = false;
+            }
+          });
+      }
     } else {
       const createRequest: StaffCreateRequest = {
         firstName: formData.firstName,
@@ -335,18 +364,43 @@ export class StaffFormComponent implements OnInit, OnDestroy, OnChanges {
         teacherRegNo: formData.teacherRegNo || undefined
       };
 
-      this.staffService.createStaff(createRequest)
+      // Use image upload method if image is selected
+      if (this.selectedImageFile) {
+        this.staffService.createStaffWithImages(
+          createRequest,
+          this.selectedImageFile,
+          (progress) => {
+            this.uploadProgress = progress.percentage;
+          }
+        )
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
             this.isSubmitting = false;
+            this.uploadProgress = null;
             this.onFormSuccess(response.message);
           },
           error: (error) => {
             this.error = error.message;
             this.isSubmitting = false;
+            this.uploadProgress = null;
           }
         });
+      } else {
+        // Use regular create if no image
+        this.staffService.createStaff(createRequest)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (response) => {
+              this.isSubmitting = false;
+              this.onFormSuccess(response.message);
+            },
+            error: (error) => {
+              this.error = error.message;
+              this.isSubmitting = false;
+            }
+          });
+      }
     }
   }
 
@@ -394,5 +448,61 @@ export class StaffFormComponent implements OnInit, OnDestroy, OnChanges {
 
   onCancel(): void {
     this.close.emit();
+  }
+
+  // Image handling methods
+  onImageFileSelect(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      
+      // Validate the file
+      const validation = this.fileUploadService.validateImageFile(file);
+      if (!validation.isValid) {
+        this.toastr.error(validation.error || 'Invalid file');
+        return;
+      }
+
+      // Clean up previous preview
+      if (this.imagePreviewUrl) {
+        this.fileUploadService.revokePreviewUrl(this.imagePreviewUrl);
+      }
+
+      this.selectedImageFile = file;
+      
+      // Create preview URL
+      if (file.type.startsWith('image/')) {
+        this.imagePreviewUrl = this.fileUploadService.getImagePreviewUrl(file);
+      }
+
+      // Clear input to allow selecting same file again
+      input.value = '';
+    }
+  }
+
+  removeSelectedImage(): void {
+    // Clean up preview URL
+    if (this.imagePreviewUrl) {
+      this.fileUploadService.revokePreviewUrl(this.imagePreviewUrl);
+    }
+    
+    this.selectedImageFile = null;
+    this.imagePreviewUrl = null;
+    
+    // Clear file input
+    const fileInput = document.getElementById('imageFileInput') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    
+    // Clean up preview URL
+    if (this.imagePreviewUrl) {
+      this.fileUploadService.revokePreviewUrl(this.imagePreviewUrl);
+    }
   }
 }

@@ -10,6 +10,7 @@ import {
   ApiResponse,
   StaffListResponse
 } from './staff.model';
+import { FileUploadProgress, FileUploadService } from '../../shared/services/file-upload.service';
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +18,10 @@ import {
 export class StaffService {
   private readonly apiUrl = environment.API_URL || 'http://localhost:5050';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private fileUploadService: FileUploadService
+  ) {}
 
   getStaffs(filters: StaffFilters = {}): Observable<ApiResponse<StaffListResponse>> {
     let params = new HttpParams();
@@ -58,5 +62,35 @@ export class StaffService {
 
   deleteStaff(id: string): Observable<ApiResponse<any>> {
     return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/school-staffs/${id}`);
+  }
+
+  // Image upload methods
+  createStaffWithImages(
+    staff: StaffCreateRequest,
+    imageFile: File,
+    onProgress?: (progress: FileUploadProgress) => void
+  ): Observable<ApiResponse<Staff>> {
+    const filesObject = { image: imageFile };
+    return this.fileUploadService.uploadWithJson<Staff>(
+      '/school-staffs',
+      staff,
+      filesObject,
+      onProgress
+    );
+  }
+
+  updateStaffWithImages(
+    id: string,
+    staff: StaffUpdateRequest,
+    imageFile: File,
+    onProgress?: (progress: FileUploadProgress) => void
+  ): Observable<ApiResponse<Staff>> {
+    const filesObject = { image: imageFile };
+    return this.fileUploadService.updateWithJson<Staff>(
+      `/school-staffs/${id}`,
+      staff,
+      filesObject,
+      onProgress
+    );
   }
 }

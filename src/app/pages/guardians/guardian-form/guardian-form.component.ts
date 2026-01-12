@@ -1,9 +1,10 @@
-import { Component, OnInit, OnDestroy, Output, EventEmitter, Input, OnChanges } from '@angular/core';
+import { Component, OnInit, OnDestroy, Output, EventEmitter, Input, OnChanges, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { GuardianService } from '../guardian.service';
 import { Guardian, GuardianCreateRequest, GuardianUpdateRequest } from '../guardian.model';
 import { FilterService, FilterItem } from '../../../shared/services/filter.service';
+import { FileUploadService } from '../../../shared/services/file-upload.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
@@ -23,6 +24,11 @@ export class GuardianFormComponent implements OnInit, OnDestroy, OnChanges {
   isSubmitting = false;
   error: string | null = null;
   selectedGuardian: Guardian | null = null;
+
+  // Image upload properties
+  selectedImageFile: File | null = null;
+  imagePreviewUrl: string | null = null;
+  uploadProgress: number | null = null;
 
   @Input() guardian: Guardian | null = null;
   @Output() close = new EventEmitter<void>();
@@ -52,7 +58,9 @@ export class GuardianFormComponent implements OnInit, OnDestroy, OnChanges {
     private fb: FormBuilder,
     private guardianService: GuardianService,
     private filterService: FilterService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private fileUploadService: FileUploadService,
+    private cdr: ChangeDetectorRef
   ) {
     this.guardianForm = this.createGuardianForm();
   }
@@ -73,11 +81,6 @@ export class GuardianFormComponent implements OnInit, OnDestroy, OnChanges {
         this.resetForm();
       }
     }
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   private createGuardianForm(): FormGroup {
@@ -289,18 +292,44 @@ export class GuardianFormComponent implements OnInit, OnDestroy, OnChanges {
         nationality: formData.nationality
       };
 
-      this.guardianService.updateGuardian(this.selectedGuardian.id, updateRequest)
+      // Use image upload method if image is selected
+      if (this.selectedImageFile) {
+        this.guardianService.updateGuardianWithImages(
+          this.selectedGuardian.id,
+          updateRequest,
+          this.selectedImageFile,
+          (progress) => {
+            this.uploadProgress = progress.percentage;
+          }
+        )
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
             this.isSubmitting = false;
+            this.uploadProgress = null;
             this.onFormSuccess(response.message);
           },
           error: (error) => {
             this.error = error.message;
             this.isSubmitting = false;
+            this.uploadProgress = null;
           }
         });
+      } else {
+        // Use regular update if no image
+        this.guardianService.updateGuardian(this.selectedGuardian.id, updateRequest)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (response) => {
+              this.isSubmitting = false;
+              this.onFormSuccess(response.message);
+            },
+            error: (error) => {
+              this.error = error.message;
+              this.isSubmitting = false;
+            }
+          });
+      }
     } else {
       const createRequest: GuardianCreateRequest = {
         firstName: formData.firstName,
@@ -319,18 +348,43 @@ export class GuardianFormComponent implements OnInit, OnDestroy, OnChanges {
         nationality: formData.nationality
       };
 
-      this.guardianService.createGuardian(createRequest)
+      // Use image upload method if image is selected
+      if (this.selectedImageFile) {
+        this.guardianService.createGuardianWithImages(
+          createRequest,
+          this.selectedImageFile,
+          (progress) => {
+            this.uploadProgress = progress.percentage;
+          }
+        )
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
             this.isSubmitting = false;
+            this.uploadProgress = null;
             this.onFormSuccess(response.message);
           },
           error: (error) => {
             this.error = error.message;
             this.isSubmitting = false;
+            this.uploadProgress = null;
           }
         });
+      } else {
+        // Use regular create if no image
+        this.guardianService.createGuardian(createRequest)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (response) => {
+              this.isSubmitting = false;
+              this.onFormSuccess(response.message);
+            },
+            error: (error) => {
+              this.error = error.message;
+              this.isSubmitting = false;
+            }
+          });
+      }
     }
   }
 
@@ -378,5 +432,61 @@ export class GuardianFormComponent implements OnInit, OnDestroy, OnChanges {
 
   onCancel(): void {
     this.close.emit();
+  }
+
+  // Image handling methods
+  onImageFileSelect(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      
+      // Validate the file
+      const validation = this.fileUploadService.validateImageFile(file);
+      if (!validation.isValid) {
+        this.toastr.error(validation.error || 'Invalid file');
+        return;
+      }
+
+      // Clean up previous preview
+      if (this.imagePreviewUrl) {
+        this.fileUploadService.revokePreviewUrl(this.imagePreviewUrl);
+      }
+
+      this.selectedImageFile = file;
+      
+      // Create preview URL
+      if (file.type.startsWith('image/')) {
+        this.imagePreviewUrl = this.fileUploadService.getImagePreviewUrl(file);
+      }
+
+      // Clear input to allow selecting same file again
+      input.value = '';
+    }
+  }
+
+  removeSelectedImage(): void {
+    // Clean up preview URL
+    if (this.imagePreviewUrl) {
+      this.fileUploadService.revokePreviewUrl(this.imagePreviewUrl);
+    }
+    
+    this.selectedImageFile = null;
+    this.imagePreviewUrl = null;
+    
+    // Clear file input
+    const fileInput = document.getElementById('imageFileInput') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    
+    // Clean up preview URL
+    if (this.imagePreviewUrl) {
+      this.fileUploadService.revokePreviewUrl(this.imagePreviewUrl);
+    }
   }
 }

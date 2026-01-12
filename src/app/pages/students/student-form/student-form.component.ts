@@ -2,8 +2,17 @@ import { Component, OnInit, OnDestroy, Output, EventEmitter, Input, OnChanges, C
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { StudentService } from '../student.service';
-import { Student, StudentCreateRequest, StudentUpdateRequest, OrphanCategory } from '../student.model';
+import { 
+  Student, 
+  StudentCreateRequest, 
+  StudentUpdateRequest, 
+  StudentCreateWithFilesRequest, 
+  StudentUpdateWithFilesRequest, 
+  OrphanCategory, 
+  SchoolClass 
+} from '../student.model';
 import { FilterService, FilterItem } from '../../../shared/services/filter.service';
+import { FileUploadService, FileUploadProgress } from '../../../shared/services/file-upload.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
@@ -21,8 +30,22 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
   studentForm: FormGroup;
   isEditMode = false;
   isSubmitting = false;
-  error: string | null = null;
   selectedStudent: Student | null = null;
+  
+  // Image upload properties
+  selectedImageFiles: File[] = [];
+  imagePreviewUrls: string[] = [];
+  uploadProgress: number | null = null;
+  existingImageIds: string[] = [];
+  readonly maxImages = 5;
+
+  // Computed property for filtered existing images
+  get remainingExistingImages(): any[] {
+    if (!this.selectedStudent || !this.selectedStudent.images) {
+      return [];
+    }
+    return this.selectedStudent.images.filter(img => this.existingImageIds.includes(img.id));
+  }
 
   @Input() student: Student | null = null;
   @Output() close = new EventEmitter<void>();
@@ -44,6 +67,7 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
   ];
 
   orphanCategories: OrphanCategory[] = [];
+  classes: SchoolClass[] = [];
   districts: FilterItem[] = [];
   counties: FilterItem[] = [];
   subCounties: FilterItem[] = [];
@@ -53,7 +77,9 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
     private fb: FormBuilder,
     private studentService: StudentService,
     private filterService: FilterService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private fileUploadService: FileUploadService,
+    private cdr: ChangeDetectorRef
   ) {
     this.studentForm = this.createStudentForm();
   }
@@ -61,6 +87,7 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
   ngOnInit(): void {
     this.loadDistricts();
     this.loadOrphanCategories();
+    this.loadClasses();
     if (this.student) {
       this.setEditMode(this.student);
     }
@@ -77,16 +104,12 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
   private createStudentForm(): FormGroup {
     return this.fb.group({
       firstName: ['', [Validators.required, Validators.maxLength(100)]],
       lastName: ['', [Validators.required, Validators.maxLength(100)]],
       email: ['', [Validators.required, Validators.email]],
+      classId: ['', Validators.required],
       countryCode: ['+91', Validators.required],
       mobileNumber: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
       gender: ['MALE', Validators.required],
@@ -123,6 +146,21 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
           if (response.success) {
             this.orphanCategories = response.data;
           }
+        }
+      });
+  }
+
+  loadClasses(): void {
+    this.studentService.getClasses({ limit: 100, sortBy: 'name', orderBy: 'asc', includeParent: true })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.classes = response.data.schoolClasses;
+          }
+        },
+        error: (error) => {
+          this.toastr.error('Failed to load classes');
         }
       });
   }
@@ -198,6 +236,9 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
     this.isEditMode = true;
     this.selectedStudent = student;
     
+    // Initialize existing image IDs
+    this.existingImageIds = student.images?.map(img => img.id) || [];
+    
     // Load location hierarchy for the student's location
     if (student.districtId) {
       this.loadLocationHierarchy(student.districtId, student.countyId, student.subCountyId, student.parishId);
@@ -207,6 +248,7 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
       firstName: student.firstName,
       lastName: student.lastName,
       email: student.email,
+      classId: student.classId,
       countryCode: student.countryCode,
       mobileNumber: student.mobileNumber,
       gender: student.gender,
@@ -265,16 +307,26 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
   resetForm(): void {
     this.isEditMode = false;
     this.selectedStudent = null;
-    this.error = null;
-    this.counties = [];
-    this.subCounties = [];
-    this.parishes = [];
-    this.studentForm.reset({
+    this.selectedImageFiles = [];
+    this.imagePreviewUrls = [];
+    this.uploadProgress = null;
+    this.existingImageIds = [];
+    this.studentForm.reset();
+    this.resetLocationFields();
+    // Reset form to default values
+    this.studentForm.patchValue({
       countryCode: '+91',
       gender: 'MALE',
       hasSpecialNeeds: false,
       orphanCategory: 'NONE'
     });
+  }
+
+  private resetLocationFields(): void {
+    this.districts = [];
+    this.counties = [];
+    this.subCounties = [];
+    this.parishes = [];
   }
 
   onSubmit(): void {
@@ -284,15 +336,14 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
     }
 
     this.isSubmitting = true;
-    this.error = null;
-
     const formData = this.studentForm.value;
 
     if (this.isEditMode && this.selectedStudent) {
-      const updateRequest: StudentUpdateRequest = {
+      const updateRequest: StudentUpdateWithFilesRequest = {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
+        classId: formData.classId,
         countryCode: formData.countryCode,
         mobileNumber: formData.mobileNumber,
         gender: formData.gender,
@@ -305,26 +356,68 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
         subCountyId: formData.subCountyId,
         parishId: formData.parishId,
         orphanCategory: formData.orphanCategory,
-        nationality: formData.nationality
+        nationality: formData.nationality,
+        keepImageIds: this.existingImageIds
       };
 
-      this.studentService.updateStudent(this.selectedStudent.id, updateRequest)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
+      // Use file upload if images are selected
+      if (this.selectedImageFiles.length > 0) {
+        // Validate image addition
+        const currentImageCount = this.selectedStudent.images?.length || 0;
+        const countValidation = this.fileUploadService.validateImageLimit(currentImageCount);
+        
+        if (!countValidation.isValid) {
+          this.toastr.error(countValidation.error || 'Cannot add more images');
+          this.isSubmitting = false;
+          return;
+        }
+
+        // For now, we'll upload the first image (API limitation)
+        // TODO: Update API to support multiple images
+        const onProgress = (progress: FileUploadProgress) => {
+          this.uploadProgress = progress.percentage;
+        };
+
+        this.studentService.updateStudentWithImages(
+          this.selectedStudent.id,
+          updateRequest,
+          this.selectedImageFiles[0], // Upload first image
+          onProgress
+        ).subscribe({
           next: (response) => {
             this.isSubmitting = false;
+            this.uploadProgress = null;
             this.onFormSuccess(response.message);
           },
           error: (error) => {
-            this.error = error.message;
             this.isSubmitting = false;
+            this.uploadProgress = null;
           }
         });
+      } else {
+        // Use regular update if no new image
+        const regularUpdateRequest: StudentUpdateRequest = {
+          ...updateRequest
+        };
+
+        this.studentService.updateStudent(this.selectedStudent.id, regularUpdateRequest)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (response) => {
+              this.isSubmitting = false;
+              this.onFormSuccess(response.message);
+            },
+            error: (error) => {
+              this.isSubmitting = false;
+            }
+          });
+      }
     } else {
-      const createRequest: StudentCreateRequest = {
+      const createRequest: StudentCreateWithFilesRequest = {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
+        classId: formData.classId,
         countryCode: formData.countryCode,
         mobileNumber: formData.mobileNumber,
         gender: formData.gender,
@@ -340,18 +433,44 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
         nationality: formData.nationality
       };
 
-      this.studentService.createStudent(createRequest)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (response) => {
-            this.isSubmitting = false;
-            this.onFormSuccess(response.message);
-          },
-          error: (error) => {
-            this.error = error.message;
-            this.isSubmitting = false;
-          }
-        });
+      if (this.selectedImageFiles.length > 0) {
+        // For now, we'll upload the first image (API limitation)
+        // TODO: Update API to support multiple images
+        const onProgress = (progress: FileUploadProgress) => {
+          this.uploadProgress = progress.percentage;
+        };
+
+        this.studentService.createStudentWithImages(createRequest, this.selectedImageFiles[0], onProgress)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (response) => {
+              this.isSubmitting = false;
+              this.uploadProgress = null;
+              this.onFormSuccess(response.message);
+            },
+            error: (error) => {
+              this.isSubmitting = false;
+              this.uploadProgress = null;
+            }
+          });
+      } else {
+        // Use regular create if no image
+        const regularCreateRequest: StudentCreateRequest = {
+          ...createRequest
+        };
+
+        this.studentService.createStudent(regularCreateRequest)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (response) => {
+              this.isSubmitting = false;
+              this.onFormSuccess(response.message);
+            },
+            error: (error) => {
+              this.isSubmitting = false;
+            }
+          });
+      }
     }
   }
 
@@ -399,5 +518,101 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
 
   onCancel(): void {
     this.close.emit();
+  }
+
+  // Image handling methods
+  onImageFilesSelect(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const files = Array.from(input.files);
+      
+      // Check if adding these files would exceed max images
+      const totalImages = this.selectedImageFiles.length + this.existingImageIds.length + files.length;
+      if (totalImages > this.maxImages) {
+        const availableSlots = this.maxImages - (this.selectedImageFiles.length + this.existingImageIds.length);
+        this.toastr.error(`You can only add ${availableSlots} more image(s). Maximum ${this.maxImages} images allowed.`);
+        input.value = '';
+        return;
+      }
+      
+      // Validate and add each file
+      files.forEach(file => {
+        const validation = this.fileUploadService.validateImageFile(file);
+        if (!validation.isValid) {
+          this.toastr.error(validation.error || 'Invalid file');
+          return;
+        }
+        
+        this.selectedImageFiles.push(file);
+        
+        // Create preview URL
+        if (file.type.startsWith('image/')) {
+          const previewUrl = this.fileUploadService.getImagePreviewUrl(file);
+          this.imagePreviewUrls.push(previewUrl);
+        }
+      });
+
+      // Clear input to allow selecting same files again
+      input.value = '';
+    }
+  }
+
+  removeImageFile(index: number): void {
+    // Clean up preview URL
+    if (this.imagePreviewUrls[index]) {
+      this.fileUploadService.revokePreviewUrl(this.imagePreviewUrls[index]);
+    }
+    
+    // Remove file and preview
+    this.selectedImageFiles.splice(index, 1);
+    this.imagePreviewUrls.splice(index, 1);
+    
+    // Clear file input
+    const fileInput = document.getElementById('imageFilesInput') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+    
+    // Trigger change detection to update UI
+    this.cdr.detectChanges();
+  }
+
+  clearAllImages(): void {
+    // Clean up all preview URLs
+    this.imagePreviewUrls.forEach(url => {
+      this.fileUploadService.revokePreviewUrl(url);
+    });
+    
+    this.selectedImageFiles = [];
+    this.imagePreviewUrls = [];
+    
+    // Clear file input
+    const fileInput = document.getElementById('imageFilesInput') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+    
+    // Trigger change detection to update UI
+    this.cdr.detectChanges();
+  }
+
+  removeExistingImage(imageId: string): void {
+    // Remove from existingImageIds array
+    const index = this.existingImageIds.indexOf(imageId);
+    if (index > -1) {
+      this.existingImageIds.splice(index, 1);
+      // Trigger change detection to update UI
+      this.cdr.detectChanges();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    
+    // Clean up all preview URLs
+    this.imagePreviewUrls.forEach(url => {
+      this.fileUploadService.revokePreviewUrl(url);
+    });
   }
 }
