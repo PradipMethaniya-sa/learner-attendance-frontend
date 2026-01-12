@@ -364,7 +364,7 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
       if (this.selectedImageFiles.length > 0) {
         // Validate image addition
         const currentImageCount = this.selectedStudent.images?.length || 0;
-        const countValidation = this.studentService.validateImageAddition(currentImageCount);
+        const countValidation = this.fileUploadService.validateImageLimit(currentImageCount);
         
         if (!countValidation.isValid) {
           this.toastr.error(countValidation.error || 'Cannot add more images');
@@ -537,7 +537,7 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
       
       // Validate and add each file
       files.forEach(file => {
-        const validation = this.studentService.validateStudentImage(file);
+        const validation = this.fileUploadService.validateImageFile(file);
         if (!validation.isValid) {
           this.toastr.error(validation.error || 'Invalid file');
           return;

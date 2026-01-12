@@ -42,6 +42,14 @@ export class StaffListComponent implements OnInit, OnDestroy {
 
   // Table configuration
   columns: TableColumn[] = [
+    { 
+      key: 'avatarUrl', 
+      label: 'Photo', 
+      type: 'image',
+      imageKey: 'avatarUrl',
+      imageFallback: '/assets/images/default-avatar.png',
+      imageClass: 'w-10 h-10 rounded-full object-cover'
+    },
     { key: 'firstName', label: 'First Name', sortable: true },
     { key: 'lastName', label: 'Last Name', sortable: true },
     { key: 'email', label: 'Email', sortable: true },
@@ -49,7 +57,18 @@ export class StaffListComponent implements OnInit, OnDestroy {
     { key: 'nationalId', label: 'National ID' },
     { key: 'gender', label: 'Gender' },
     { key: 'teacherRegNo', label: 'Teacher Reg No' },
-    { key: 'status', label: 'Status' },
+    { 
+      key: 'status', 
+      label: 'Status',
+      type: 'badge',
+      badgeClass: (value: string) => {
+        switch (value) {
+          case 'ACTIVE': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+          case 'INACTIVE': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+          default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
+        }
+      }
+    },
     { key: 'actions', label: 'Actions', actions: true }
   ];
 

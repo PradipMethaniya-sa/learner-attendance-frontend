@@ -10,6 +10,7 @@ import {
   ApiResponse,
   GuardianListResponse
 } from './guardian.model';
+import { FileUploadService, FileUploadProgress } from '../../shared/services/file-upload.service';
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +18,10 @@ import {
 export class GuardianService {
   private readonly apiUrl = environment.API_URL || 'http://localhost:5051';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private fileUploadService: FileUploadService
+  ) {}
 
   getGuardians(filters: GuardianFilters = {}): Observable<ApiResponse<GuardianListResponse>> {
     let params = new HttpParams();
@@ -58,5 +62,35 @@ export class GuardianService {
 
   deleteGuardian(id: string): Observable<ApiResponse<any>> {
     return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/guardians/${id}`);
+  }
+
+  // Image upload methods
+  createGuardianWithImages(
+    guardian: GuardianCreateRequest,
+    imageFile: File,
+    onProgress?: (progress: FileUploadProgress) => void
+  ): Observable<ApiResponse<Guardian>> {
+    const filesObject = { image: imageFile };
+    return this.fileUploadService.uploadWithJson<Guardian>(
+      '/guardians',
+      guardian,
+      filesObject,
+      onProgress
+    );
+  }
+
+  updateGuardianWithImages(
+    id: string,
+    guardian: GuardianUpdateRequest,
+    imageFile: File,
+    onProgress?: (progress: FileUploadProgress) => void
+  ): Observable<ApiResponse<Guardian>> {
+    const filesObject = { image: imageFile };
+    return this.fileUploadService.updateWithJson<Guardian>(
+      `/guardians/${id}`,
+      guardian,
+      filesObject,
+      onProgress
+    );
   }
 }

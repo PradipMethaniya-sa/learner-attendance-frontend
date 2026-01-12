@@ -439,7 +439,7 @@ export class SchoolFormComponent implements OnInit, OnDestroy, OnChanges {
       const file = input.files[0];
       
       // Validate file
-      const validation = this.schoolService.validateLogoFile(file);
+      const validation = this.fileUploadService.validateImageFile(file);
       if (!validation.isValid) {
         this.toastr.error(validation.error || 'Invalid file');
         input.value = ''; // Clear input

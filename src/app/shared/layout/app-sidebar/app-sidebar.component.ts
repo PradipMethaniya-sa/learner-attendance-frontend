@@ -2,8 +2,6 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, QueryList, ViewChildren, ChangeDetectorRef } from '@angular/core';
 import { SidebarService } from '../../services/sidebar.service';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
-import { SafeHtmlPipe } from '../../pipe/safe-html.pipe';
-import { SidebarWidgetComponent } from './app-sidebar-widget.component';
 import { combineLatest, Subscription } from 'rxjs';
 
 type NavItem = {
@@ -19,8 +17,6 @@ type NavItem = {
   imports: [
     CommonModule,
     RouterModule,
-    SafeHtmlPipe,
-    SidebarWidgetComponent
   ],
   templateUrl: './app-sidebar.component.html',
 })

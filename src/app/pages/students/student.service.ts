@@ -135,29 +135,4 @@ export class StudentService {
       onProgress
     );
   }
-
-  /**
-   * Validate student image file
-   * @param file File to validate
-   * @returns Validation result
-   */
-  validateStudentImage(file: File): { isValid: boolean; error?: string } {
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-    return this.fileUploadService.validateFile(file, allowedTypes, 5); // 5MB limit
-  }
-
-  /**
-   * Check if student can add image (for edit mode)
-   * @param currentImageCount Current number of images
-   * @returns Validation result
-   */
-  validateImageAddition(currentImageCount: number): { isValid: boolean; error?: string } {
-    if (currentImageCount >= 5) {
-      return {
-        isValid: false,
-        error: `Maximum 5 images allowed. Student already has ${currentImageCount} images.`
-      };
-    }
-    return { isValid: true };
-  }
 }

@@ -122,14 +122,4 @@ export class SchoolService {
       onProgress
     );
   }
-
-  /**
-   * Validate school logo file
-   * @param file File to validate
-   * @returns Validation result
-   */
-  validateLogoFile(file: File): { isValid: boolean; error?: string } {
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-    return this.fileUploadService.validateFile(file, allowedTypes, 5); // 5MB limit
-  }
 }
