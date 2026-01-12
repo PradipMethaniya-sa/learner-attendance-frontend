@@ -80,8 +80,30 @@
                           </button>
                         }
                       </div>
+                    } @else if (column.type === 'image') {
+                      <div class="flex items-center">
+                        <img 
+                          [src]="getImageUrl(row, column)" 
+                          [alt]="column.label"
+                          [class]="column.imageClass || 'w-10 h-10 rounded-lg object-cover'"
+                          loading="lazy"
+                        />
+                        <!-- @if (column.key && getCellValue(row, column.key)) {
+                          <span class="ml-3 text-sm text-gray-900 dark:text-white">{{ getCellValue(row, column.key) }}</span>
+                        } -->
+                      </div>
+                    } @else if (column.type === 'badge') {
+                      <span class="px-2 py-1 text-xs font-medium rounded-full {{ getBadgeClass(row, column) }}">
+                        {{ getCellValue(row, column.key) }}
+                      </span>
+                    } @else if (column.type === 'date') {
+                      <span class="text-sm text-gray-900 dark:text-white">
+                        {{ formatDate(getCellValue(row, column.key), column.formatDate) }}
+                      </span>
+                    } @else if (column.type === 'custom') {
+                      <div [innerHTML]="renderCustomCell(row, column)"></div>
                     } @else {
-                      {{ getCellValue(row, column.key) }}
+                      <span class="text-sm text-gray-900 dark:text-white">{{ getCellValue(row, column.key) }}</span>
                     }
                   </td>
                 }

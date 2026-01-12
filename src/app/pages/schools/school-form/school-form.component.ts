@@ -1,9 +1,11 @@
 import { Component, OnInit, OnDestroy, Output, EventEmitter, Input, OnChanges, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { SchoolService } from '../school.service';
-import { School, SchoolCreateRequest, SchoolUpdateRequest } from '../school.model';
+import { School, SchoolCreateRequest, SchoolUpdateRequest, SchoolCreateWithFileRequest, SchoolUpdateWithFileRequest } from '../school.model';
 import { FilterService, FilterItem } from '../../../shared/services/filter.service';
+import { FileUploadService, FileUploadProgress } from '../../../shared/services/file-upload.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
@@ -23,6 +25,9 @@ export class SchoolFormComponent implements OnInit, OnDestroy, OnChanges {
   isSubmitting = false;
   error: string | null = null;
   selectedSchool: School | null = null;
+  selectedLogoFile: File | null = null;
+  logoPreviewUrl: string | null = null;
+  uploadProgress: number | null = null;
 
   @Input() school: School | null = null;
   @Output() close = new EventEmitter<void>();
@@ -46,7 +51,9 @@ export class SchoolFormComponent implements OnInit, OnDestroy, OnChanges {
     private fb: FormBuilder,
     private schoolService: SchoolService,
     private filterService: FilterService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private fileUploadService: FileUploadService,
+    private http: HttpClient
   ) {
     this.schoolForm = this.createSchoolForm();
   }
@@ -69,11 +76,6 @@ export class SchoolFormComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
   private createSchoolForm(): FormGroup {
     return this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(200)]],
@@ -84,8 +86,9 @@ export class SchoolFormComponent implements OnInit, OnDestroy, OnChanges {
       addressLine1: ['', [Validators.required, Validators.maxLength(500)]],
       addressLine2: ['', Validators.maxLength(500)],
       parishId: ['', Validators.required],
-      logoUrl: ['', Validators.pattern(/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/)],
-      registrationNo: ['', [Validators.required, Validators.maxLength(50)]]
+      logoUrl: [''],
+      registrationNo: ['', [Validators.required, Validators.maxLength(50)]],
+      logo: [''] // New field for file upload
     });
   }
 
@@ -182,6 +185,7 @@ export class SchoolFormComponent implements OnInit, OnDestroy, OnChanges {
       logoUrl: school.logoUrl,
       registrationNo: school.registrationNo
     });
+    this.logoPreviewUrl = school.logoUrl || null;
   }
 
   private loadLocationHierarchy(districtId: string, countyId: string, subCountyId: string, parishId: string): void {
@@ -245,6 +249,9 @@ export class SchoolFormComponent implements OnInit, OnDestroy, OnChanges {
     this.isEditMode = false;
     this.selectedSchool = null;
     this.error = null;
+    this.selectedLogoFile = null;
+    this.logoPreviewUrl = null;
+    this.uploadProgress = null;
     this.counties = [];
     this.subCounties = [];
     this.parishes = [];
@@ -265,7 +272,7 @@ export class SchoolFormComponent implements OnInit, OnDestroy, OnChanges {
     const formData = this.schoolForm.value;
 
     if (this.isEditMode && this.selectedSchool) {
-      const updateRequest: SchoolUpdateRequest = {
+      const updateRequest: SchoolUpdateWithFileRequest = {
         name: formData.name,
         email: formData.email,
         countryCode: formData.countryCode,
@@ -274,26 +281,53 @@ export class SchoolFormComponent implements OnInit, OnDestroy, OnChanges {
         addressLine1: formData.addressLine1,
         addressLine2: formData.addressLine2 || undefined,
         parishId: formData.parishId,
-        logoUrl: formData.logoUrl || undefined,
         registrationNo: formData.registrationNo
       };
 
-      this.schoolService.updateSchool(this.selectedSchool.id, updateRequest)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (response) => {
-            this.isSubmitting = false;
-            // Emit success event with API message
-            console.log('Update response:', response);
-            this.onFormSuccess(response.message);
-          },
-          error: (error) => {
-            this.error = error.message;
-            this.isSubmitting = false;
-          }
-        });
+      // Use file upload if a new logo is selected
+      if (this.selectedLogoFile) {
+        const onProgress = (progress: FileUploadProgress) => {
+          this.uploadProgress = progress.percentage;
+        };
+
+        this.schoolService.updateSchoolWithLogo(this.selectedSchool.id, updateRequest, this.selectedLogoFile, onProgress)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (response) => {
+              this.isSubmitting = false;
+              this.uploadProgress = null;
+              console.log('Update response:', response);
+              this.onFormSuccess(response.message);
+            },
+            error: (error) => {
+              this.error = error.message;
+              this.isSubmitting = false;
+              this.uploadProgress = null;
+            }
+          });
+      } else {
+        // Use regular update if no new logo
+        const regularUpdateRequest: SchoolUpdateRequest = {
+          ...updateRequest,
+          logoUrl: formData.logoUrl || undefined
+        };
+
+        this.schoolService.updateSchool(this.selectedSchool.id, regularUpdateRequest)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (response) => {
+              this.isSubmitting = false;
+              console.log('Update response:', response);
+              this.onFormSuccess(response.message);
+            },
+            error: (error) => {
+              this.error = error.message;
+              this.isSubmitting = false;
+            }
+          });
+      }
     } else {
-      const createRequest: SchoolCreateRequest = {
+      const createRequest: SchoolCreateWithFileRequest = {
         name: formData.name,
         email: formData.email,
         countryCode: formData.countryCode,
@@ -302,24 +336,50 @@ export class SchoolFormComponent implements OnInit, OnDestroy, OnChanges {
         addressLine1: formData.addressLine1,
         addressLine2: formData.addressLine2 || undefined,
         parishId: formData.parishId,
-        logoUrl: formData.logoUrl || undefined,
         registrationNo: formData.registrationNo
       };
 
-      this.schoolService.createSchool(createRequest)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (response) => {
-            this.isSubmitting = false;
-            // Emit success event with API message
-            console.log('Create response:', response);
-            this.onFormSuccess(response.message);
-          },
-          error: (error) => {
-            this.error = error.message;
-            this.isSubmitting = false;
-          }
-        });
+      if (this.selectedLogoFile) {
+        const onProgress = (progress: FileUploadProgress) => {
+          this.uploadProgress = progress.percentage;
+        };
+
+        this.schoolService.createSchoolWithLogo(createRequest, this.selectedLogoFile, onProgress)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (response) => {
+              this.isSubmitting = false;
+              this.uploadProgress = null;
+              console.log('Create response:', response);
+              this.onFormSuccess(response.message);
+            },
+            error: (error) => {
+              this.error = error.message;
+              this.isSubmitting = false;
+              this.uploadProgress = null;
+            }
+          });
+      } else {
+        // Use regular create if no logo
+        const regularCreateRequest: SchoolCreateRequest = {
+          ...createRequest,
+          logoUrl: formData.logoUrl || undefined
+        };
+
+        this.schoolService.createSchool(regularCreateRequest)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (response) => {
+              this.isSubmitting = false;
+              console.log('Create response:', response);
+              this.onFormSuccess(response.message);
+            },
+            error: (error) => {
+              this.error = error.message;
+              this.isSubmitting = false;
+            }
+          });
+      }
     }
   }
 
@@ -370,5 +430,51 @@ export class SchoolFormComponent implements OnInit, OnDestroy, OnChanges {
 
   onCancel(): void {
     this.close.emit();
+  }
+
+  // File handling methods
+  onLogoFileSelect(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      
+      // Validate file
+      const validation = this.schoolService.validateLogoFile(file);
+      if (!validation.isValid) {
+        this.toastr.error(validation.error || 'Invalid file');
+        input.value = ''; // Clear input
+        return;
+      }
+
+      this.selectedLogoFile = file;
+      
+      // Create preview for images
+      if (file.type.startsWith('image/')) {
+        this.logoPreviewUrl = this.fileUploadService.getImagePreviewUrl(file);
+      }
+    }
+  }
+
+  removeSelectedLogo(): void {
+    this.selectedLogoFile = null;
+    if (this.logoPreviewUrl) {
+      this.fileUploadService.revokePreviewUrl(this.logoPreviewUrl);
+      this.logoPreviewUrl = null;
+    }
+    // Clear file input
+    const fileInput = document.getElementById('logoFileInput') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    
+    // Clean up preview URL
+    if (this.logoPreviewUrl) {
+      this.fileUploadService.revokePreviewUrl(this.logoPreviewUrl);
+    }
   }
 }

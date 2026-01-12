@@ -59,6 +59,18 @@ export interface SchoolCreateRequest {
   registrationNo: string;
 }
 
+export interface SchoolCreateWithFileRequest {
+  name: string;
+  email: string;
+  countryCode: string;
+  mobileNo: string;
+  website?: string;
+  addressLine1: string;
+  addressLine2?: string;
+  parishId: string;
+  registrationNo: string;
+}
+
 export interface SchoolUpdateRequest {
   name: string;
   email: string;
@@ -69,6 +81,18 @@ export interface SchoolUpdateRequest {
   addressLine2?: string;
   parishId: string;
   logoUrl?: string;
+  registrationNo: string;
+}
+
+export interface SchoolUpdateWithFileRequest {
+  name: string;
+  email: string;
+  countryCode: string;
+  mobileNo: string;
+  website?: string;
+  addressLine1: string;
+  addressLine2?: string;
+  parishId: string;
   registrationNo: string;
 }
 

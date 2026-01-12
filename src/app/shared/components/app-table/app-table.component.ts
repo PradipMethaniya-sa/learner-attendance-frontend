@@ -89,6 +89,34 @@ export class AppTableComponent {
     return item[key] || '';
   }
 
+  getImageUrl(item: any, column: TableColumn): string {
+
+    if (column.imageKey) {
+      return item[column.imageKey] || column.imageFallback || '';
+    }
+    return item[column.key] || column.imageFallback || '';
+  }
+
+  getBadgeClass(item: any, column: TableColumn): string {
+    if (column.badgeClass) {
+      return column.badgeClass(item[column.key]);
+    }
+    return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
+  }
+
+  formatDate(value: string | Date, format: string = 'short'): string {
+    if (!value) return '';
+    const date = typeof value === 'string' ? new Date(value) : value;
+    return date.toLocaleDateString();
+  }
+
+  renderCustomCell(item: any, column: TableColumn): string {
+    if (column.customTemplate) {
+      return column.customTemplate(item);
+    }
+    return '';
+  }
+
   onActionClick(action: TableAction, item: any): void {
     if (action.disabled && action.disabled(item)) {
       return;
