@@ -21,6 +21,8 @@
   [currentSort]="{ field: currentSortBy, order: currentOrderBy }"
   [pagination]="pagination"
   [actions]="tableActions"
+  [showExportButton]="true"
+  [csvFileName]="'Student_List'"
   (searchChange)="onSearch($event)"
   (sortChange)="onSort($event)"
   (pageChange)="onPageChange($event)"

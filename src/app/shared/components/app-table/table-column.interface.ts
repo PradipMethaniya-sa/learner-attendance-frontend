@@ -10,4 +10,5 @@ export interface TableColumn {
   badgeClass?: (value: any) => string; // Dynamic badge class
   formatDate?: string; // Date format for date type
   customTemplate?: (item: any) => string; // Custom template for complex cells
+  exportable?: boolean; // Export to CSV: true includes, false/undefined excludes
 }

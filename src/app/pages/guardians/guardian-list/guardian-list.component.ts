@@ -50,13 +50,13 @@ export class GuardianListComponent implements OnInit, OnDestroy {
       imageFallback: '/assets/images/default-avatar.png',
       imageClass: 'w-10 h-10 rounded-full object-cover'
     },
-    { key: 'guardianUid', label: 'Guardian ID', sortable: true },
-    { key: 'firstName', label: 'First Name', sortable: true },
-    { key: 'lastName', label: 'Last Name', sortable: true },
-    { key: 'email', label: 'Email', sortable: true },
-    { key: 'mobileNumber', label: 'Phone', sortable: true },
-    { key: 'nationalId', label: 'National ID', sortable: true },
-    { key: 'gender', label: 'Gender' },
+    { key: 'guardianUid', label: 'Guardian ID', sortable: true, exportable: true },
+    { key: 'firstName', label: 'First Name', sortable: true, exportable: true },
+    { key: 'lastName', label: 'Last Name', sortable: true, exportable: true },
+    { key: 'email', label: 'Email', sortable: true, exportable: true },
+    { key: 'mobileNumber', label: 'Phone', sortable: true, exportable: true },
+    { key: 'nationalId', label: 'National ID', sortable: true, exportable: true },
+    { key: 'gender', label: 'Gender', exportable: true },
     { 
       key: 'status', 
       label: 'Status',
@@ -67,7 +67,8 @@ export class GuardianListComponent implements OnInit, OnDestroy {
           case 'INACTIVE': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
           default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
         }
-      }
+      },
+      exportable: true
     },
     { key: 'actions', label: 'Actions', actions: true }
   ];
