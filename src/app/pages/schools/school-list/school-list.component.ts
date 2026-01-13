@@ -48,14 +48,15 @@ export class SchoolListComponent implements OnInit, OnDestroy {
       type: 'image',
       imageKey: 'logoUrl',
       imageFallback: '/assets/images/default-school-logo.png',
-      imageClass: 'w-10 h-10 rounded-lg object-cover'
+      imageClass: 'w-10 h-10 rounded-lg object-cover',
+      exportable: false
     },
-    { key: 'name', label: 'School Name', sortable: true },
-    { key: 'email', label: 'Email', sortable: true },
-    { key: 'mobileNo', label: 'Phone', sortable: true },
-    { key: 'registrationNo', label: 'Registration No', sortable: true },
-    { key: 'districtName', label: 'District' },
-    { key: 'parishName', label: 'Parish' },
+    { key: 'name', label: 'School Name', sortable: true, exportable: true },
+    { key: 'email', label: 'Email', sortable: true, exportable: true },
+    { key: 'mobileNo', label: 'Phone', sortable: true, exportable: true },
+    { key: 'registrationNo', label: 'Registration No', sortable: true, exportable: true },
+    { key: 'districtName', label: 'District', exportable: true },
+    { key: 'parishName', label: 'Parish', exportable: true },
     { 
       key: 'status', 
       label: 'Status',
@@ -66,9 +67,10 @@ export class SchoolListComponent implements OnInit, OnDestroy {
           case 'INACTIVE': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
           default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
         }
-      }
+      },
+      exportable: true
     },
-    { key: 'actions', label: 'Actions', actions: true }
+    { key: 'actions', label: 'Actions', actions: true, exportable: false }
   ];
 
   // Table actions

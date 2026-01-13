@@ -345,6 +345,160 @@
         </div>
       </div>
 
+      <!-- Guardian Mapping -->
+      @if (isEditMode) {
+        <div>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Guardian Mapping</h3>
+          <div class="space-y-4">
+            <!-- Assigned Guardians -->
+            <div>
+              <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Linked Guardians</h4>
+              @if (assignedGuardians.length === 0) {
+                <div class="text-sm text-gray-500 dark:text-gray-400 italic">
+                  No guardians assigned yet
+                </div>
+              } @else {
+                <div class="space-y-2">
+                  @for (guardian of assignedGuardians; track guardian.assignmentId) {
+                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <div class="flex items-center space-x-4">
+                        <!-- Avatar -->
+                        <div class="flex-shrink-0">
+                          @if (guardian.avatarUrl) {
+                            <img 
+                              [src]="guardian.avatarUrl" 
+                              [alt]="guardian.firstName + ' ' + guardian.lastName"
+                              class="w-12 h-12 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
+                            />
+                          } @else {
+                            <div class="w-12 h-12 bg-brand-100 dark:bg-brand-900/30 rounded-full flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
+                              <span class="text-sm font-medium text-brand-600 dark:text-brand-400">
+                                {{ guardian.firstName.charAt(0) }}{{ guardian.lastName.charAt(0) }}
+                              </span>
+                            </div>
+                          }
+                        </div>
+                        
+                        <!-- Guardian Info -->
+                        <div class="flex-1">
+                          <div class="flex items-center space-x-2 mb-1">
+                            <p class="text-sm font-semibold text-gray-900 dark:text-white">
+                              {{ guardian.firstName }} {{ guardian.lastName }}
+                            </p>
+                          </div>
+                          <div class="space-y-1">
+                            <p class="text-xs text-gray-600 dark:text-gray-400">
+                              {{ guardian.countryCode || '+1' }} {{ guardian.mobileNumber || 'No phone' }} | {{ guardian.email || 'No email' }}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <!-- Relation Badge and Delete Button -->
+                      <div class="flex items-center space-x-2">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                          {{ guardian.relation }}
+                        </span>
+                        <button
+                          type="button"
+                          (click)="unassignGuardian(guardian)"
+                          class="flex-shrink-0 p-2 text-red-600 hover:text-red-800 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          title="Remove guardian"
+                        >
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Add Guardian Section -->
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+              <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Add Guardian</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Guardian Dropdown -->
+                <div>
+                  <label for="guardianSelect" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Select Guardian
+                  </label>
+                  <select
+                    id="guardianSelect"
+                    formControlName="guardianId"
+                    (change)="onGuardianSelect()"
+                    [disabled]="isLoadingGuardians || getFilteredAvailableGuardians().length === 0"
+                    class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 focus:border-brand-500 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-brand-500 dark:focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Select a guardian</option>
+                    @for (guardian of getFilteredAvailableGuardians(); track guardian.id) {
+                      <option [value]="guardian.id">
+                        {{ guardian.firstName }} {{ guardian.lastName }} ({{ guardian.guardianUid }})
+                      </option>
+                    }
+                  </select>
+                  @if (getFilteredAvailableGuardians().length === 0 && !isLoadingGuardians) {
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      No available guardians to assign
+                    </p>
+                  }
+                  @if (isLoadingGuardians) {
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      Loading guardians...
+                    </p>
+                  }
+                </div>
+
+                <!-- Relation Dropdown -->
+                <div>
+                  <label for="relationSelect" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Relation
+                  </label>
+                  <select
+                    id="relationSelect"
+                    formControlName="relation"
+                    (change)="onGuardianSelect()"
+                    [disabled]="!studentForm.get('guardianId')?.value || guardianRelations.length === 0"
+                    class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 focus:border-brand-500 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-brand-500 dark:focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Select relation</option>
+                    @for (relation of guardianRelations; track relation.value) {
+                      <option [value]="relation.value">
+                        {{ relation.displayName }}
+                      </option>
+                    }
+                  </select>
+                </div>
+              </div>
+
+              <!-- Add Button -->
+              @if (studentForm.get('guardianId')?.value && studentForm.get('relation')?.value) {
+                <div class="mt-4">
+                  <button
+                    type="button"
+                    (click)="assignGuardian()"
+                    [disabled]="!studentForm.get('guardianId')?.value || !studentForm.get('relation')?.value"
+                    class="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:bg-brand-300 disabled:cursor-not-allowed"
+                  >
+                    Add Guardian
+                  </button>
+                </div>
+              }
+            </div>
+
+            <!-- Help Text -->
+            <!-- <div class="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+              <p>• Select guardians from the dropdown to assign them to the student</p>
+              <p>• Each guardian must have a specified relation</p>
+              <p>• Click the ❌ button to remove assigned guardians</p>
+              <p>• First assigned guardian automatically becomes primary</p>
+            </div> -->
+          </div>
+        </div>
+      }
+
       <!-- Address Information -->
       <div>
         <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Address Information</h3>

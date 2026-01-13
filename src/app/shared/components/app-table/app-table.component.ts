@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TableColumn } from './table-column.interface';
 import { PaginationComponent } from '../pagination';
+import { mkConfig, generateCsv, download } from 'export-to-csv';
 
 export interface TableAction {
   key: string;
@@ -39,6 +40,8 @@ export class AppTableComponent {
   @Input() currentSort: SortChange = { field: '', order: 'asc' };
   @Input() pagination: any = null;
   @Input() actions: TableAction[] = [];
+  @Input() csvFileName: string = 'export';
+  @Input() showExportButton: boolean = false;
 
   @Output() searchChange = new EventEmitter<string>();
   @Output() sortChange = new EventEmitter<SortChange>();
@@ -86,7 +89,7 @@ export class AppTableComponent {
   }
 
   getCellValue(item: any, key: string): string {
-    return item[key] || '';
+    return item[key] || '-';
   }
 
   getImageUrl(item: any, column: TableColumn): string {
@@ -123,5 +126,62 @@ export class AppTableComponent {
     }
     this.actionClick.emit({ action: action.key, item });
     action.onClick(item);
+  }
+  exportToCsv(): void {
+    // Filter columns that are explicitly marked as exportable: true
+    const exportableColumns = this.columns.filter(column => 
+      column.exportable === true && 
+      !column.actions
+    );
+    
+    if (exportableColumns.length === 0 || this.data.length === 0) {
+      return;
+    }
+
+    const csvData = this.data.map(item => {
+      const row: any = {};
+      exportableColumns.forEach(column => {
+        let value = item[column.key];
+        
+        // Handle null/undefined values
+        if (value === null || value === undefined) {
+          value = '';
+        }
+        
+        // Handle different column types
+        if (column.type === 'date' && value) {
+          value = this.formatDate(value);
+        } else if (typeof value === 'object' && value !== null && column.type !== 'image') {
+          value = JSON.stringify(value);
+        }
+        
+        // Use the column key as the property name for CSV
+        row[column.key] = value;
+      });
+      return row;
+    });
+    console.log('CSV data:', csvData);
+
+    try {
+      // Step 1: Configure CSV with proper columnHeaders format
+      const columnHeaders = exportableColumns.map(column => ({
+        key: column.key,
+        displayLabel: column.label
+      }));
+      
+      const csvConfig = mkConfig({ 
+        filename: this.csvFileName,
+        columnHeaders: columnHeaders,
+        useKeysAsHeaders: false
+      });
+
+      // Step 2: Generate CSV string
+      const csvString = generateCsv(csvConfig)(csvData);
+
+      // Step 3: Download the CSV file
+      download(csvConfig)(csvString);
+    } catch (error) {
+      console.error('Error exporting CSV:', error);
+    }
   }
 }

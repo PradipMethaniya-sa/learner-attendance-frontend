@@ -24,7 +24,7 @@ export interface Student {
   avatarUrl: string | null;
   images: StudentImage[];
   status: 'ACTIVE' | 'INACTIVE';
-  guardians: any[];
+  guardians: Guardian[];
   addressLine1: string;
   addressLine2: string;
   districtId: string;
@@ -61,27 +61,6 @@ export interface StudentPagination {
   last: boolean;
   numberOfElements: number;
 }
-
-export interface StudentCreateRequest {
-  firstName: string;
-  lastName: string;
-  email: string;
-  classId: string;
-  countryCode: string;
-  mobileNumber: string;
-  gender: 'MALE' | 'FEMALE' | 'OTHER';
-  dob: string;
-  hasSpecialNeeds: boolean;
-  addressLine1: string;
-  addressLine2?: string;
-  districtId: string;
-  countyId: string;
-  subCountyId: string;
-  parishId: string;
-  orphanCategory: 'NONE' | 'SINGLE_ORPHAN' | 'DOUBLE_ORPHAN';
-  nationality: string;
-}
-
 export interface StudentCreateWithFilesRequest {
   firstName: string;
   lastName: string;
@@ -101,28 +80,6 @@ export interface StudentCreateWithFilesRequest {
   orphanCategory: 'NONE' | 'SINGLE_ORPHAN' | 'DOUBLE_ORPHAN';
   nationality: string;
 }
-
-export interface StudentUpdateRequest {
-  firstName: string;
-  lastName: string;
-  email: string;
-  classId: string;
-  countryCode: string;
-  mobileNumber: string;
-  gender: 'MALE' | 'FEMALE' | 'OTHER';
-  dob: string;
-  hasSpecialNeeds: boolean;
-  addressLine1: string;
-  addressLine2?: string;
-  districtId: string;
-  countyId: string;
-  subCountyId: string;
-  parishId: string;
-  orphanCategory: 'NONE' | 'SINGLE_ORPHAN' | 'DOUBLE_ORPHAN';
-  nationality: string;
-  keepImageIds?: string[];
-}
-
 export interface StudentUpdateWithFilesRequest {
   firstName: string;
   lastName: string;
@@ -203,4 +160,76 @@ export interface StudentListResponse {
 export interface OrphanCategory {
   value: string;
   displayName: string;
+}
+export interface Guardian {
+  assignmentId: string;
+  guardianId: string;
+  guardianUid: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  countryCode: string;
+  mobileNumber: string;
+  avatarUrl: string | null;
+  relation: string;
+  isPrimary: boolean;
+}
+
+export interface GuardianDetails {
+  id: string;
+  guardianUid: string;
+  generalUserInfoId: string;
+  schoolId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  countryCode: string;
+  mobileNumber: string;
+  nationalId: string;
+  gender: 'MALE' | 'FEMALE' | 'OTHER';
+  dob: string | null;
+  addressLine1: string;
+  addressLine2: string | null;
+  parishId: string;
+  parishName: string;
+  subCountyId: string;
+  subCountyName: string;
+  countyId: string;
+  countyName: string;
+  districtId: string;
+  districtName: string;
+  nationality: string;
+  avatarUrl: string;
+  avatarThumbUrl: string;
+  status: 'ACTIVE' | 'INACTIVE';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GuardianRelation {
+  displayName: string;
+  value: string;
+}
+
+export interface GuardianListResponse {
+  guardians: GuardianDetails[];
+  pagination: any;
+}
+
+export interface GuardianAssignRequest {
+  studentId: string;
+  data: GuardianAssignment[];
+  removeAssignIds: string[];
+}
+
+export interface GuardianAssignment {
+  guardianId: string;
+  relation: string;
+  isPrimary: boolean;
+}
+
+export interface GuardianAssignResponse {
+  assigned: any[];
+  unassigned: any[];
+  message: string;
 }
