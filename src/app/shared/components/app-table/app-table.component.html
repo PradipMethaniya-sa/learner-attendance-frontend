@@ -39,12 +39,12 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-          <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
+          <thead class="text-gray-700 bg-gray-50 dark:bg-gray-800 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
             <tr>
               @for (column of columns; track column.key) {
-                <th class="px-6 py-4 font-semibold" scope="col">
+                <th class="px-4 py-2 font-semibold" scope="col">
                   @if (column.actions) {
-                    <span class="text-right">Actions</span>
+                    <span>Actions</span>
                   } @else if (column.sortable) {
                     <button 
                       (click)="onSortClick(column)" 
@@ -65,9 +65,9 @@
             @for (row of data; track row.id) {
               <tr class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                 @for (column of columns; track column.key) {
-                  <td class="px-6 py-4">
+                  <td class="px-4 py-2">
                     @if (column.actions) {
-                      <div class="flex items-center justify-end gap-2">
+                      <div class="flex items-center gap-2">
                         @for (action of actions; track action.key) {
                           <button 
                             (click)="onActionClick(action, row)"

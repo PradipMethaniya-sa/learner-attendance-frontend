@@ -86,7 +86,7 @@ export class AppTableComponent {
   }
 
   getCellValue(item: any, key: string): string {
-    return item[key] || '';
+    return item[key] || '-';
   }
 
   getImageUrl(item: any, column: TableColumn): string {

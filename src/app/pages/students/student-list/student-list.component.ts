@@ -56,6 +56,7 @@ export class StudentListComponent implements OnInit, OnDestroy {
     { key: 'email', label: 'Email', sortable: true },
     { key: 'mobileNumber', label: 'Phone', sortable: true },
     { key: 'gender', label: 'Gender', sortable: true },
+    { key: 'guardianCount', label: 'No Of Guardians', type: 'text', sortable: true },
     { 
       key: 'status', 
       label: 'Status',
@@ -145,6 +146,10 @@ export class StudentListComponent implements OnInit, OnDestroy {
         next: (response: any) => {
           if (response.success) {
             this.students = response.data.students;
+            this.students = response.data.students.map((student: any) => ({
+              ...student,
+              guardianCount: student.guardians?.length ?? 0
+            }));
             this.pagination = response.data.pagination;
             this.total = response.data.pagination.totalElements;
           }

@@ -5,8 +5,6 @@ import { environment } from '../../../environments/environment';
 import {
   Student,
   StudentFilters,
-  StudentCreateRequest,
-  StudentUpdateRequest,
   StudentCreateWithFilesRequest,
   StudentUpdateWithFilesRequest,
   ApiResponse,
@@ -14,7 +12,12 @@ import {
   OrphanCategory,
   SchoolClass,
   ClassFilters,
-  ClassListResponse
+  ClassListResponse,
+  GuardianDetails,
+  GuardianRelation,
+  GuardianListResponse,
+  GuardianAssignRequest,
+  GuardianAssignResponse
 } from './student.model';
 import { FileUploadService, FileUploadProgress } from '../../shared/services/file-upload.service';
 
@@ -60,15 +63,6 @@ export class StudentService {
   getStudentById(id: string): Observable<ApiResponse<Student>> {
     return this.http.get<ApiResponse<Student>>(`${this.apiUrl}/students/${id}`);
   }
-
-  createStudent(student: StudentCreateRequest): Observable<ApiResponse<Student>> {
-    return this.http.post<ApiResponse<Student>>(`${this.apiUrl}/students`, student);
-  }
-
-  updateStudent(id: string, student: StudentUpdateRequest): Observable<ApiResponse<Student>> {
-    return this.http.put<ApiResponse<Student>>(`${this.apiUrl}/students/${id}`, student);
-  }
-
   deleteStudent(id: string): Observable<ApiResponse<any>> {
     return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/students/${id}`);
   }
@@ -101,13 +95,16 @@ export class StudentService {
   // File upload methods
   createStudentWithImages(
     student: StudentCreateWithFilesRequest,
-    imageFile: File,
+    imageFile: File | undefined,
     onProgress?: (progress: FileUploadProgress) => void
   ): Observable<ApiResponse<Student>> {
-    // Single image upload as per API requirement
-    const filesObject: { [key: string]: File } = {
-      'image': imageFile
-    };
+    // Always use multipart form data
+    const filesObject: { [key: string]: File } = {};
+    
+    // Add image if provided
+    if (imageFile) {
+      filesObject['image'] = imageFile;
+    }
 
     return this.fileUploadService.uploadWithJson<Student>(
       '/students',
@@ -120,13 +117,16 @@ export class StudentService {
   updateStudentWithImages(
     id: string,
     student: StudentUpdateWithFilesRequest,
-    imageFile: File,
+    imageFile: File | undefined,
     onProgress?: (progress: FileUploadProgress) => void
   ): Observable<ApiResponse<Student>> {
-    // Single image upload as per API requirement
-    const filesObject: { [key: string]: File } = {
-      'image': imageFile
-    };
+    // Always use multipart form data
+    const filesObject: { [key: string]: File } = {};
+    
+    // Add image if provided
+    if (imageFile) {
+      filesObject['image'] = imageFile;
+    }
 
     return this.fileUploadService.updateWithJson<Student>(
       `/students/${id}`,
@@ -134,5 +134,22 @@ export class StudentService {
       filesObject,
       onProgress
     );
+  }
+
+  // Guardian API methods
+  getGuardians(isSkipPagination: boolean = true): Observable<ApiResponse<GuardianListResponse>> {
+    let params = new HttpParams();
+    if (isSkipPagination) {
+      params = params.set('isSkipPagination', 'true');
+    }
+    return this.http.get<ApiResponse<GuardianListResponse>>(`${this.apiUrl}/guardians`, { params });
+  }
+
+  getGuardianRelations(): Observable<ApiResponse<GuardianRelation[]>> {
+    return this.http.get<ApiResponse<GuardianRelation[]>>(`${this.apiUrl}/guardians/relations`);
+  }
+
+  bulkAssignUnassignGuardians(request: GuardianAssignRequest): Observable<ApiResponse<GuardianAssignResponse>> {
+    return this.http.post<ApiResponse<GuardianAssignResponse>>(`${this.apiUrl}/guardians/bulk-assign-unassign`, request);
   }
 }

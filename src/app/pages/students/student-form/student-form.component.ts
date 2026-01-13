@@ -1,15 +1,17 @@
 import { Component, OnInit, OnDestroy, Output, EventEmitter, Input, OnChanges, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { StudentService } from '../student.service';
 import { 
-  Student, 
-  StudentCreateRequest, 
-  StudentUpdateRequest, 
+  Student,
   StudentCreateWithFilesRequest, 
   StudentUpdateWithFilesRequest, 
   OrphanCategory, 
-  SchoolClass 
+  SchoolClass,
+  Guardian,
+  GuardianDetails,
+  GuardianRelation,
+  GuardianAssignment
 } from '../student.model';
 import { FilterService, FilterItem } from '../../../shared/services/filter.service';
 import { FileUploadService, FileUploadProgress } from '../../../shared/services/file-upload.service';
@@ -20,7 +22,7 @@ import { ToastrService } from 'ngx-toastr';
 @Component({
   selector: 'app-student-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './student-form.component.html',
   styleUrls: ['./student-form.component.scss']
 })
@@ -73,6 +75,17 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
   subCounties: FilterItem[] = [];
   parishes: FilterItem[] = [];
 
+  // Guardian Mapping properties
+  assignedGuardians: Guardian[] = [];
+  availableGuardians: GuardianDetails[] = [];
+  guardianRelations: GuardianRelation[] = [];
+  isLoadingGuardians = false;
+  
+  // Track guardian changes for bulk update
+  guardiansToAdd: GuardianAssignment[] = [];
+  guardiansToRemove: string[] = [];
+  originalAssignedGuardians: Guardian[] = [];
+
   constructor(
     private fb: FormBuilder,
     private studentService: StudentService,
@@ -88,6 +101,8 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
     this.loadDistricts();
     this.loadOrphanCategories();
     this.loadClasses();
+    this.loadGuardianRelations();
+    this.loadGuardians();
     if (this.student) {
       this.setEditMode(this.student);
     }
@@ -122,7 +137,10 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
       subCountyId: ['', Validators.required],
       parishId: ['', Validators.required],
       orphanCategory: ['NONE', Validators.required],
-      nationality: ['', [Validators.required, Validators.maxLength(100)]]
+      nationality: ['', [Validators.required, Validators.maxLength(100)]],
+      // Guardian mapping controls
+      guardianId: [''],
+      relation: ['']
     });
   }
 
@@ -161,6 +179,40 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
         },
         error: (error) => {
           this.toastr.error('Failed to load classes');
+        }
+      });
+  }
+
+  loadGuardianRelations(): void {
+    this.studentService.getGuardianRelations()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.guardianRelations = response.data;
+          }
+        },
+        error: (error) => {
+          this.toastr.error('Failed to load guardian relations');
+        }
+      });
+  }
+
+  loadGuardians(): void {
+    this.isLoadingGuardians = true;
+    this.studentService.getGuardians(true)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.availableGuardians = response.data.guardians;
+            this.filterAvailableGuardians();
+          }
+          this.isLoadingGuardians = false;
+        },
+        error: (error) => {
+          this.toastr.error('Failed to load guardians');
+          this.isLoadingGuardians = false;
         }
       });
   }
@@ -239,6 +291,14 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
     // Initialize existing image IDs
     this.existingImageIds = student.images?.map(img => img.id) || [];
     
+    // Load assigned guardians and store original for comparison
+    this.assignedGuardians = student.guardians || [];
+    this.originalAssignedGuardians = JSON.parse(JSON.stringify(student.guardians || [])); // Deep copy
+    
+    // Reset guardian changes tracking
+    this.guardiansToAdd = [];
+    this.guardiansToRemove = [];
+    
     // Load location hierarchy for the student's location
     if (student.districtId) {
       this.loadLocationHierarchy(student.districtId, student.countyId, student.subCountyId, student.parishId);
@@ -311,6 +371,11 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
     this.imagePreviewUrls = [];
     this.uploadProgress = null;
     this.existingImageIds = [];
+    this.assignedGuardians = [];
+    this.availableGuardians = [];
+    this.originalAssignedGuardians = [];
+    this.guardiansToAdd = [];
+    this.guardiansToRemove = [];
     this.studentForm.reset();
     this.resetLocationFields();
     // Reset form to default values
@@ -318,8 +383,12 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
       countryCode: '+91',
       gender: 'MALE',
       hasSpecialNeeds: false,
-      orphanCategory: 'NONE'
+      orphanCategory: 'NONE',
+      guardianId: '',
+      relation: ''
     });
+    // Reload guardians for fresh state
+    this.loadGuardians();
   }
 
   private resetLocationFields(): void {
@@ -360,118 +429,128 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
         keepImageIds: this.existingImageIds
       };
 
-      // Use file upload if images are selected
-      if (this.selectedImageFiles.length > 0) {
-        // Validate image addition
-        const currentImageCount = this.selectedStudent.images?.length || 0;
-        const countValidation = this.fileUploadService.validateImageLimit(currentImageCount);
-        
-        if (!countValidation.isValid) {
-          this.toastr.error(countValidation.error || 'Cannot add more images');
-          this.isSubmitting = false;
-          return;
-        }
+      // Update student first, then handle guardians
+      this.updateStudentAndGuardians(updateRequest);
+    } else {
+      this.createStudent(formData);
+    }
+  }
 
-        // For now, we'll upload the first image (API limitation)
-        // TODO: Update API to support multiple images
-        const onProgress = (progress: FileUploadProgress) => {
-          this.uploadProgress = progress.percentage;
-        };
+  private updateStudentAndGuardians(updateRequest: StudentUpdateWithFilesRequest): void {
+    if (!this.selectedStudent) {
+      this.isSubmitting = false;
+      this.toastr.error('No student selected for update');
+      return;
+    }
+    this.handleGuardianUpdate();
+    // Always use updateStudentWithImages (with undefined image if none selected)
+    const onProgress = (progress: FileUploadProgress) => {
+      this.uploadProgress = progress.percentage;
+    };
 
-        this.studentService.updateStudentWithImages(
-          this.selectedStudent.id,
-          updateRequest,
-          this.selectedImageFiles[0], // Upload first image
-          onProgress
-        ).subscribe({
+    const imageFile = this.selectedImageFiles.length > 0 ? this.selectedImageFiles[0] : undefined;
+
+    this.studentService.updateStudentWithImages(
+      this.selectedStudent.id,
+      updateRequest,
+      imageFile,
+      onProgress
+    ).subscribe({
+      next: (response) => {
+        this.uploadProgress = null;
+      },
+      error: (error) => {
+        this.isSubmitting = false;
+        this.uploadProgress = null;
+      }
+    });
+  }
+
+  private handleGuardianUpdate(): void {
+    if (!this.selectedStudent) {
+      this.isSubmitting = false;
+      this.toastr.error('No student selected for guardian update');
+      return;
+    }
+
+    // Check if there are guardian changes to process
+    if (this.guardiansToAdd.length > 0 || this.guardiansToRemove.length > 0) {
+      const guardianRequest = {
+        studentId: this.selectedStudent.id,
+        data: this.guardiansToAdd,
+        removeAssignIds: this.guardiansToRemove
+      };
+
+      this.studentService.bulkAssignUnassignGuardians(guardianRequest)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
           next: (response) => {
-            this.isSubmitting = false;
-            this.uploadProgress = null;
-            this.onFormSuccess(response.message);
+            if (response.success) {
+              this.toastr.success('Student and guardians updated successfully');
+              this.resetGuardianTracking();
+              this.onFormSuccess('Student updated successfully');
+            }
           },
           error: (error) => {
             this.isSubmitting = false;
-            this.uploadProgress = null;
+            this.toastr.error('Student updated but guardian changes failed');
           }
         });
-      } else {
-        // Use regular update if no new image
-        const regularUpdateRequest: StudentUpdateRequest = {
-          ...updateRequest
-        };
-
-        this.studentService.updateStudent(this.selectedStudent.id, regularUpdateRequest)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: (response) => {
-              this.isSubmitting = false;
-              this.onFormSuccess(response.message);
-            },
-            error: (error) => {
-              this.isSubmitting = false;
-            }
-          });
-      }
     } else {
-      const createRequest: StudentCreateWithFilesRequest = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        classId: formData.classId,
-        countryCode: formData.countryCode,
-        mobileNumber: formData.mobileNumber,
-        gender: formData.gender,
-        dob: formData.dob,
-        hasSpecialNeeds: formData.hasSpecialNeeds,
-        addressLine1: formData.addressLine1,
-        addressLine2: formData.addressLine2 || undefined,
-        districtId: formData.districtId,
-        countyId: formData.countyId,
-        subCountyId: formData.subCountyId,
-        parishId: formData.parishId,
-        orphanCategory: formData.orphanCategory,
-        nationality: formData.nationality
-      };
-
-      if (this.selectedImageFiles.length > 0) {
-        // For now, we'll upload the first image (API limitation)
-        // TODO: Update API to support multiple images
-        const onProgress = (progress: FileUploadProgress) => {
-          this.uploadProgress = progress.percentage;
-        };
-
-        this.studentService.createStudentWithImages(createRequest, this.selectedImageFiles[0], onProgress)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: (response) => {
-              this.isSubmitting = false;
-              this.uploadProgress = null;
-              this.onFormSuccess(response.message);
-            },
-            error: (error) => {
-              this.isSubmitting = false;
-              this.uploadProgress = null;
-            }
-          });
-      } else {
-        // Use regular create if no image
-        const regularCreateRequest: StudentCreateRequest = {
-          ...createRequest
-        };
-
-        this.studentService.createStudent(regularCreateRequest)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: (response) => {
-              this.isSubmitting = false;
-              this.onFormSuccess(response.message);
-            },
-            error: (error) => {
-              this.isSubmitting = false;
-            }
-          });
-      }
+      // No guardian changes, just complete the update
+      this.toastr.success('Student updated successfully');
+      this.onFormSuccess('Student updated successfully');
     }
+  }
+
+  private resetGuardianTracking(): void {
+    // Reset tracking arrays after successful update
+    this.originalAssignedGuardians = JSON.parse(JSON.stringify(this.assignedGuardians));
+    this.guardiansToAdd = [];
+    this.guardiansToRemove = [];
+  }
+
+  private createStudent(formData: any): void {
+    const createRequest: StudentCreateWithFilesRequest = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      classId: formData.classId,
+      countryCode: formData.countryCode,
+      mobileNumber: formData.mobileNumber,
+      gender: formData.gender,
+      dob: formData.dob,
+      hasSpecialNeeds: formData.hasSpecialNeeds,
+      addressLine1: formData.addressLine1,
+      addressLine2: formData.addressLine2 || undefined,
+      districtId: formData.districtId,
+      countyId: formData.countyId,
+      subCountyId: formData.subCountyId,
+      parishId: formData.parishId,
+      orphanCategory: formData.orphanCategory,
+      nationality: formData.nationality
+    };
+
+    // Always use createStudentWithImages (with undefined image if none selected)
+    const onProgress = (progress: FileUploadProgress) => {
+      this.uploadProgress = progress.percentage;
+    };
+
+    const imageFile = this.selectedImageFiles.length > 0 ? this.selectedImageFiles[0] : undefined;
+
+    this.studentService.createStudentWithImages(createRequest, imageFile, onProgress)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.isSubmitting = false;
+          this.uploadProgress = null;
+          this.onFormSuccess(response.message);
+        },
+        error: (error) => {
+          this.isSubmitting = false;
+          this.uploadProgress = null;
+        }
+      });
   }
 
   private onFormSuccess(message?: string): void {
@@ -603,6 +682,106 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
       this.existingImageIds.splice(index, 1);
       // Trigger change detection to update UI
       this.cdr.detectChanges();
+    }
+  }
+
+  // Guardian Mapping methods
+  filterAvailableGuardians(): void {
+    const assignedGuardianIds = this.assignedGuardians.map(g => g.guardianId);
+    this.availableGuardians = this.availableGuardians.filter(guardian => 
+      !assignedGuardianIds.includes(guardian.id)
+    );
+  }
+
+  getFilteredAvailableGuardians(): GuardianDetails[] {
+    const assignedGuardianIds = this.assignedGuardians.map(g => g.guardianId);
+    return this.availableGuardians.filter(guardian => 
+      !assignedGuardianIds.includes(guardian.id)
+    );
+  }
+
+  onGuardianSelect(): void {
+    const guardianId = this.studentForm.get('guardianId')?.value;
+    const relation = this.studentForm.get('relation')?.value;
+    if (guardianId && relation) {
+      this.assignGuardian();
+    }
+  }
+
+  assignGuardian(): void {
+    const guardianId = this.studentForm.get('guardianId')?.value;
+    const relation = this.studentForm.get('relation')?.value;
+    
+    if (!guardianId || !relation) {
+      this.toastr.error('Please select both guardian and relation');
+      return;
+    }
+
+    const selectedGuardian = this.availableGuardians.find(g => g.id === guardianId);
+    if (!selectedGuardian) {
+      this.toastr.error('Selected guardian not found');
+      return;
+    }
+
+    // Check if already assigned
+    if (this.assignedGuardians.some(g => g.guardianId === guardianId)) {
+      this.toastr.error('Guardian already assigned');
+      return;
+    }
+
+    // Create new guardian object
+    const newGuardian: Guardian = {
+      assignmentId: '', // Will be set by API
+      guardianId: selectedGuardian.id,
+      guardianUid: selectedGuardian.guardianUid,
+      firstName: selectedGuardian.firstName,
+      lastName: selectedGuardian.lastName,
+      email: selectedGuardian.email,
+      countryCode: selectedGuardian.countryCode,
+      mobileNumber: selectedGuardian.mobileNumber,
+      avatarUrl: selectedGuardian.avatarUrl,
+      relation: relation,
+      isPrimary: this.assignedGuardians.length === 0 // First guardian is primary
+    };
+
+    // Add to assigned guardians (optimistic update)
+    this.assignedGuardians.push(newGuardian);
+    this.filterAvailableGuardians();
+    
+    // Track for bulk update
+    this.guardiansToAdd.push({
+      guardianId: newGuardian.guardianId,
+      relation: newGuardian.relation,
+      isPrimary: newGuardian.isPrimary
+    });
+    
+    // Clear form controls
+    this.studentForm.patchValue({
+      guardianId: '',
+      relation: ''
+    });
+  }
+
+  unassignGuardian(guardian: Guardian): void {
+    if (!this.isEditMode || !this.selectedStudent) {
+      this.toastr.warning('Cannot unassign guardian in add mode');
+      return;
+    }
+
+    // Optimistic update
+    const index = this.assignedGuardians.findIndex(g => g.guardianId === guardian.guardianId);
+    if (index > -1) {
+      this.assignedGuardians.splice(index, 1);
+    }
+    this.filterAvailableGuardians();
+
+    // Track for bulk update
+    this.guardiansToRemove.push(guardian.assignmentId);
+    
+    // Remove from guardiansToAdd if it was added in this session
+    const addIndex = this.guardiansToAdd.findIndex(g => g.guardianId === guardian.guardianId);
+    if (addIndex > -1) {
+      this.guardiansToAdd.splice(addIndex, 1);
     }
   }
 
