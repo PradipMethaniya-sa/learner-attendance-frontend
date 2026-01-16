@@ -49,7 +49,7 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
     return this.selectedStudent.images.filter(img => this.existingImageIds.includes(img.id));
   }
 
-  @Input() student: Student | null = null;
+  @Input() studentId: string | null = null;
   @Output() close = new EventEmitter<void>();
   @Output() success = new EventEmitter<void>();
 
@@ -103,20 +103,37 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
     this.loadClasses();
     this.loadGuardianRelations();
     this.loadGuardians();
-    if (this.student) {
-      this.setEditMode(this.student);
+    if (this.studentId) {
+      this.loadStudentDetails(this.studentId);
     }
   }
 
   ngOnChanges(): void {
     // Only handle changes if component is initialized and districts are loaded
     if (this.districts.length > 0) {
-      if (this.student) {
-        this.setEditMode(this.student);
+      if (this.studentId) {
+        this.loadStudentDetails(this.studentId);
       } else {
         this.resetForm();
       }
     }
+  }
+
+  private loadStudentDetails(studentId: string): void {
+    this.studentService.getStudentById(studentId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.setEditMode(response.data);
+          } else {
+            this.toastr.error('Failed to load student details');
+          }
+        },
+        error: (error) => {
+          this.toastr.error('Failed to load student details');
+        }
+      });
   }
 
   private createStudentForm(): FormGroup {

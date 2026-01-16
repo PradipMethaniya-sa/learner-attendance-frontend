@@ -4,7 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { StaffService } from '../staff.service';
 import { Staff, StaffCreateRequest, StaffUpdateRequest } from '../staff.model';
 import { FilterService, FilterItem } from '../../../shared/services/filter.service';
-import { FileUploadService } from '../../../shared/services/file-upload.service';
+import { FileUploadService, FileUploadProgress } from '../../../shared/services/file-upload.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
@@ -306,44 +306,30 @@ export class StaffFormComponent implements OnInit, OnDestroy, OnChanges {
         teacherRegNo: formData.teacherRegNo || undefined
       };
 
-      // Use image upload method if image is selected
-      if (this.selectedImageFile) {
-        this.staffService.updateStaffWithImages(
-          this.selectedStaff.id,
-          updateRequest,
-          this.selectedImageFile,
-          (progress) => {
-            this.uploadProgress = progress.percentage;
-          }
-        )
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (response) => {
-            this.isSubmitting = false;
-            this.uploadProgress = null;
-            this.onFormSuccess(response.message);
-          },
-          error: (error) => {
-            this.error = error.message;
-            this.isSubmitting = false;
-            this.uploadProgress = null;
-          }
-        });
-      } else {
-        // Use regular update if no image
-        this.staffService.updateStaff(this.selectedStaff.id, updateRequest)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: (response) => {
-              this.isSubmitting = false;
-              this.onFormSuccess(response.message);
-            },
-            error: (error) => {
-              this.error = error.message;
-              this.isSubmitting = false;
-            }
-          });
-      }
+      // Always use updateStaffWithImages (with undefined image if none selected)
+      const onProgress = (progress: FileUploadProgress) => {
+        this.uploadProgress = progress.percentage;
+      };
+
+      const imageFile = this.selectedImageFile || undefined;
+
+      this.staffService.updateStaffWithImages(
+        this.selectedStaff.id,
+        updateRequest,
+        imageFile,
+        onProgress
+      ).subscribe({
+        next: (response) => {
+          this.isSubmitting = false;
+          this.uploadProgress = null;
+          this.onFormSuccess(response.message);
+        },
+        error: (error) => {
+          this.error = error.message;
+          this.isSubmitting = false;
+          this.uploadProgress = null;
+        }
+      });
     } else {
       const createRequest: StaffCreateRequest = {
         firstName: formData.firstName,
@@ -364,43 +350,29 @@ export class StaffFormComponent implements OnInit, OnDestroy, OnChanges {
         teacherRegNo: formData.teacherRegNo || undefined
       };
 
-      // Use image upload method if image is selected
-      if (this.selectedImageFile) {
-        this.staffService.createStaffWithImages(
-          createRequest,
-          this.selectedImageFile,
-          (progress) => {
-            this.uploadProgress = progress.percentage;
-          }
-        )
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (response) => {
-            this.isSubmitting = false;
-            this.uploadProgress = null;
-            this.onFormSuccess(response.message);
-          },
-          error: (error) => {
-            this.error = error.message;
-            this.isSubmitting = false;
-            this.uploadProgress = null;
-          }
-        });
-      } else {
-        // Use regular create if no image
-        this.staffService.createStaff(createRequest)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: (response) => {
-              this.isSubmitting = false;
-              this.onFormSuccess(response.message);
-            },
-            error: (error) => {
-              this.error = error.message;
-              this.isSubmitting = false;
-            }
-          });
-      }
+      // Always use createStaffWithImages (with undefined image if none selected)
+      const onProgress = (progress: FileUploadProgress) => {
+        this.uploadProgress = progress.percentage;
+      };
+
+      const imageFile = this.selectedImageFile || undefined;
+
+      this.staffService.createStaffWithImages(
+        createRequest,
+        imageFile,
+        onProgress
+      ).subscribe({
+        next: (response) => {
+          this.isSubmitting = false;
+          this.uploadProgress = null;
+          this.onFormSuccess(response.message);
+        },
+        error: (error) => {
+          this.error = error.message;
+          this.isSubmitting = false;
+          this.uploadProgress = null;
+        }
+      });
     }
   }
 

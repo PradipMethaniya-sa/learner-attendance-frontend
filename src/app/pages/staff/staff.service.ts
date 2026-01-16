@@ -51,15 +51,6 @@ export class StaffService {
   getStaffById(id: string): Observable<ApiResponse<Staff>> {
     return this.http.get<ApiResponse<Staff>>(`${this.apiUrl}/school-staffs/${id}`);
   }
-
-  createStaff(staff: StaffCreateRequest): Observable<ApiResponse<Staff>> {
-    return this.http.post<ApiResponse<Staff>>(`${this.apiUrl}/school-staffs`, staff);
-  }
-
-  updateStaff(id: string, staff: StaffUpdateRequest): Observable<ApiResponse<Staff>> {
-    return this.http.put<ApiResponse<Staff>>(`${this.apiUrl}/school-staffs/${id}`, staff);
-  }
-
   deleteStaff(id: string): Observable<ApiResponse<any>> {
     return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/school-staffs/${id}`);
   }
@@ -67,10 +58,17 @@ export class StaffService {
   // Image upload methods
   createStaffWithImages(
     staff: StaffCreateRequest,
-    imageFile: File,
+    imageFile: File | undefined,
     onProgress?: (progress: FileUploadProgress) => void
   ): Observable<ApiResponse<Staff>> {
-    const filesObject = { image: imageFile };
+    // Always use multipart form data
+    const filesObject: { [key: string]: File } = {};
+    
+    // Add image if provided
+    if (imageFile) {
+      filesObject['image'] = imageFile;
+    }
+
     return this.fileUploadService.uploadWithJson<Staff>(
       '/school-staffs',
       staff,
@@ -82,10 +80,17 @@ export class StaffService {
   updateStaffWithImages(
     id: string,
     staff: StaffUpdateRequest,
-    imageFile: File,
+    imageFile: File | undefined,
     onProgress?: (progress: FileUploadProgress) => void
   ): Observable<ApiResponse<Staff>> {
-    const filesObject = { image: imageFile };
+    // Always use multipart form data
+    const filesObject: { [key: string]: File } = {};
+    
+    // Add image if provided
+    if (imageFile) {
+      filesObject['image'] = imageFile;
+    }
+
     return this.fileUploadService.updateWithJson<Staff>(
       `/school-staffs/${id}`,
       staff,

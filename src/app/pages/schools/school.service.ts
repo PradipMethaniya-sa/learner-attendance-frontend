@@ -54,15 +54,6 @@ export class SchoolService {
   getSchoolById(id: string): Observable<ApiResponse<School>> {
     return this.http.get<ApiResponse<School>>(`${this.apiUrl}/schools/${id}`);
   }
-
-  createSchool(school: SchoolCreateRequest): Observable<ApiResponse<School>> {
-    return this.http.post<ApiResponse<School>>(`${this.apiUrl}/schools`, school);
-  }
-
-  updateSchool(id: string, school: SchoolUpdateRequest): Observable<ApiResponse<School>> {
-    return this.http.put<ApiResponse<School>>(`${this.apiUrl}/schools/${id}`, school);
-  }
-
   activateSchool(id: string): Observable<ApiResponse<any>> {
     return this.http.patch<ApiResponse<any>>(`${this.apiUrl}/schools/${id}/activate`, {});
   }
@@ -98,13 +89,21 @@ export class SchoolService {
   // File upload methods
   createSchoolWithLogo(
     school: SchoolCreateWithFileRequest,
-    logoFile: File,
+    logoFile: File | undefined,
     onProgress?: (progress: FileUploadProgress) => void
   ): Observable<ApiResponse<School>> {
+    // Always use multipart form data
+    const filesObject: { [key: string]: File } = {};
+    
+    // Add logo if provided
+    if (logoFile) {
+      filesObject['logo'] = logoFile;
+    }
+
     return this.fileUploadService.uploadWithJson<School>(
       '/schools',
       school,
-      { logo: logoFile },
+      filesObject,
       onProgress
     );
   }
@@ -112,13 +111,21 @@ export class SchoolService {
   updateSchoolWithLogo(
     id: string,
     school: SchoolUpdateWithFileRequest,
-    logoFile: File,
+    logoFile: File | undefined,
     onProgress?: (progress: FileUploadProgress) => void
   ): Observable<ApiResponse<School>> {
+    // Always use multipart form data
+    const filesObject: { [key: string]: File } = {};
+    
+    // Add logo if provided
+    if (logoFile) {
+      filesObject['logo'] = logoFile;
+    }
+
     return this.fileUploadService.updateWithJson<School>(
       `/schools/${id}`,
       school,
-      { logo: logoFile },
+      filesObject,
       onProgress
     );
   }

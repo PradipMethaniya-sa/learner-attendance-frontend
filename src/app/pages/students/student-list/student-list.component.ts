@@ -39,6 +39,7 @@ export class StudentListComponent implements OnInit, OnDestroy {
     type: 'info'
   };
   selectedStudent: Student | null = null;
+  selectedStudentId: string | null = null;
 
   // Table configuration
   columns: TableColumn[] = [
@@ -208,11 +209,12 @@ export class StudentListComponent implements OnInit, OnDestroy {
 
   addNewStudent(): void {
     this.selectedStudent = null;
+    this.selectedStudentId = null;
     this.showStudentForm = true;
   }
 
   editStudent(student: Student): void {
-    this.selectedStudent = student;
+    this.selectedStudentId = student.id;
     this.showStudentForm = true;
   }
 
@@ -258,6 +260,7 @@ export class StudentListComponent implements OnInit, OnDestroy {
   onStudentFormClose(): void {
     this.showStudentForm = false;
     this.selectedStudent = null;
+    this.selectedStudentId = null;
   }
 
   onStudentFormSuccess(): void {

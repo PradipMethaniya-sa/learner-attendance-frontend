@@ -284,48 +284,31 @@ export class SchoolFormComponent implements OnInit, OnDestroy, OnChanges {
         registrationNo: formData.registrationNo
       };
 
-      // Use file upload if a new logo is selected
-      if (this.selectedLogoFile) {
-        const onProgress = (progress: FileUploadProgress) => {
-          this.uploadProgress = progress.percentage;
-        };
+      // Always use updateSchoolWithLogo (with undefined logo if none selected)
+      const onProgress = (progress: FileUploadProgress) => {
+        this.uploadProgress = progress.percentage;
+      };
 
-        this.schoolService.updateSchoolWithLogo(this.selectedSchool.id, updateRequest, this.selectedLogoFile, onProgress)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: (response) => {
-              this.isSubmitting = false;
-              this.uploadProgress = null;
-              console.log('Update response:', response);
-              this.onFormSuccess(response.message);
-            },
-            error: (error) => {
-              this.error = error.message;
-              this.isSubmitting = false;
-              this.uploadProgress = null;
-            }
-          });
-      } else {
-        // Use regular update if no new logo
-        const regularUpdateRequest: SchoolUpdateRequest = {
-          ...updateRequest,
-          logoUrl: formData.logoUrl || undefined
-        };
+      const logoFile = this.selectedLogoFile || undefined;
 
-        this.schoolService.updateSchool(this.selectedSchool.id, regularUpdateRequest)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: (response) => {
-              this.isSubmitting = false;
-              console.log('Update response:', response);
-              this.onFormSuccess(response.message);
-            },
-            error: (error) => {
-              this.error = error.message;
-              this.isSubmitting = false;
-            }
-          });
-      }
+      this.schoolService.updateSchoolWithLogo(
+        this.selectedSchool.id,
+        updateRequest,
+        logoFile,
+        onProgress
+      ).subscribe({
+        next: (response) => {
+          this.isSubmitting = false;
+          this.uploadProgress = null;
+          console.log('Update response:', response);
+          this.onFormSuccess(response.message);
+        },
+        error: (error) => {
+          this.error = error.message;
+          this.isSubmitting = false;
+          this.uploadProgress = null;
+        }
+      });
     } else {
       const createRequest: SchoolCreateWithFileRequest = {
         name: formData.name,
@@ -339,47 +322,30 @@ export class SchoolFormComponent implements OnInit, OnDestroy, OnChanges {
         registrationNo: formData.registrationNo
       };
 
-      if (this.selectedLogoFile) {
-        const onProgress = (progress: FileUploadProgress) => {
-          this.uploadProgress = progress.percentage;
-        };
+      // Always use createSchoolWithLogo (with undefined logo if none selected)
+      const onProgress = (progress: FileUploadProgress) => {
+        this.uploadProgress = progress.percentage;
+      };
 
-        this.schoolService.createSchoolWithLogo(createRequest, this.selectedLogoFile, onProgress)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: (response) => {
-              this.isSubmitting = false;
-              this.uploadProgress = null;
-              console.log('Create response:', response);
-              this.onFormSuccess(response.message);
-            },
-            error: (error) => {
-              this.error = error.message;
-              this.isSubmitting = false;
-              this.uploadProgress = null;
-            }
-          });
-      } else {
-        // Use regular create if no logo
-        const regularCreateRequest: SchoolCreateRequest = {
-          ...createRequest,
-          logoUrl: formData.logoUrl || undefined
-        };
+      const logoFile = this.selectedLogoFile || undefined;
 
-        this.schoolService.createSchool(regularCreateRequest)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: (response) => {
-              this.isSubmitting = false;
-              console.log('Create response:', response);
-              this.onFormSuccess(response.message);
-            },
-            error: (error) => {
-              this.error = error.message;
-              this.isSubmitting = false;
-            }
-          });
-      }
+      this.schoolService.createSchoolWithLogo(
+        createRequest,
+        logoFile,
+        onProgress
+      ).subscribe({
+        next: (response) => {
+          this.isSubmitting = false;
+          this.uploadProgress = null;
+          console.log('Create response:', response);
+          this.onFormSuccess(response.message);
+        },
+        error: (error) => {
+          this.error = error.message;
+          this.isSubmitting = false;
+          this.uploadProgress = null;
+        }
+      });
     }
   }
 

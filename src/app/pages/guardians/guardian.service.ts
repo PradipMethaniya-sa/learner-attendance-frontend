@@ -51,15 +51,6 @@ export class GuardianService {
   getGuardianById(id: string): Observable<ApiResponse<Guardian>> {
     return this.http.get<ApiResponse<Guardian>>(`${this.apiUrl}/guardians/${id}`);
   }
-
-  createGuardian(guardian: GuardianCreateRequest): Observable<ApiResponse<Guardian>> {
-    return this.http.post<ApiResponse<Guardian>>(`${this.apiUrl}/guardians`, guardian);
-  }
-
-  updateGuardian(id: string, guardian: GuardianUpdateRequest): Observable<ApiResponse<Guardian>> {
-    return this.http.put<ApiResponse<Guardian>>(`${this.apiUrl}/guardians/${id}`, guardian);
-  }
-
   deleteGuardian(id: string): Observable<ApiResponse<any>> {
     return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/guardians/${id}`);
   }
@@ -67,10 +58,17 @@ export class GuardianService {
   // Image upload methods
   createGuardianWithImages(
     guardian: GuardianCreateRequest,
-    imageFile: File,
+    imageFile: File | undefined,
     onProgress?: (progress: FileUploadProgress) => void
   ): Observable<ApiResponse<Guardian>> {
-    const filesObject = { image: imageFile };
+    // Always use multipart form data
+    const filesObject: { [key: string]: File } = {};
+    
+    // Add image if provided
+    if (imageFile) {
+      filesObject['image'] = imageFile;
+    }
+
     return this.fileUploadService.uploadWithJson<Guardian>(
       '/guardians',
       guardian,
@@ -82,10 +80,17 @@ export class GuardianService {
   updateGuardianWithImages(
     id: string,
     guardian: GuardianUpdateRequest,
-    imageFile: File,
+    imageFile: File | undefined,
     onProgress?: (progress: FileUploadProgress) => void
   ): Observable<ApiResponse<Guardian>> {
-    const filesObject = { image: imageFile };
+    // Always use multipart form data
+    const filesObject: { [key: string]: File } = {};
+    
+    // Add image if provided
+    if (imageFile) {
+      filesObject['image'] = imageFile;
+    }
+
     return this.fileUploadService.updateWithJson<Guardian>(
       `/guardians/${id}`,
       guardian,

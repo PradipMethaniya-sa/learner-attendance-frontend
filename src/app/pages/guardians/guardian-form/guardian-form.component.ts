@@ -4,7 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { GuardianService } from '../guardian.service';
 import { Guardian, GuardianCreateRequest, GuardianUpdateRequest } from '../guardian.model';
 import { FilterService, FilterItem } from '../../../shared/services/filter.service';
-import { FileUploadService } from '../../../shared/services/file-upload.service';
+import { FileUploadService, FileUploadProgress } from '../../../shared/services/file-upload.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
@@ -292,44 +292,30 @@ export class GuardianFormComponent implements OnInit, OnDestroy, OnChanges {
         nationality: formData.nationality
       };
 
-      // Use image upload method if image is selected
-      if (this.selectedImageFile) {
-        this.guardianService.updateGuardianWithImages(
-          this.selectedGuardian.id,
-          updateRequest,
-          this.selectedImageFile,
-          (progress) => {
-            this.uploadProgress = progress.percentage;
-          }
-        )
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (response) => {
-            this.isSubmitting = false;
-            this.uploadProgress = null;
-            this.onFormSuccess(response.message);
-          },
-          error: (error) => {
-            this.error = error.message;
-            this.isSubmitting = false;
-            this.uploadProgress = null;
-          }
-        });
-      } else {
-        // Use regular update if no image
-        this.guardianService.updateGuardian(this.selectedGuardian.id, updateRequest)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: (response) => {
-              this.isSubmitting = false;
-              this.onFormSuccess(response.message);
-            },
-            error: (error) => {
-              this.error = error.message;
-              this.isSubmitting = false;
-            }
-          });
-      }
+      // Always use updateGuardianWithImages (with undefined image if none selected)
+      const onProgress = (progress: FileUploadProgress) => {
+        this.uploadProgress = progress.percentage;
+      };
+
+      const imageFile = this.selectedImageFile || undefined;
+
+      this.guardianService.updateGuardianWithImages(
+        this.selectedGuardian.id,
+        updateRequest,
+        imageFile,
+        onProgress
+      ).subscribe({
+        next: (response) => {
+          this.isSubmitting = false;
+          this.uploadProgress = null;
+          this.onFormSuccess(response.message);
+        },
+        error: (error) => {
+          this.error = error.message;
+          this.isSubmitting = false;
+          this.uploadProgress = null;
+        }
+      });
     } else {
       const createRequest: GuardianCreateRequest = {
         firstName: formData.firstName,
@@ -348,43 +334,29 @@ export class GuardianFormComponent implements OnInit, OnDestroy, OnChanges {
         nationality: formData.nationality
       };
 
-      // Use image upload method if image is selected
-      if (this.selectedImageFile) {
-        this.guardianService.createGuardianWithImages(
-          createRequest,
-          this.selectedImageFile,
-          (progress) => {
-            this.uploadProgress = progress.percentage;
-          }
-        )
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (response) => {
-            this.isSubmitting = false;
-            this.uploadProgress = null;
-            this.onFormSuccess(response.message);
-          },
-          error: (error) => {
-            this.error = error.message;
-            this.isSubmitting = false;
-            this.uploadProgress = null;
-          }
-        });
-      } else {
-        // Use regular create if no image
-        this.guardianService.createGuardian(createRequest)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: (response) => {
-              this.isSubmitting = false;
-              this.onFormSuccess(response.message);
-            },
-            error: (error) => {
-              this.error = error.message;
-              this.isSubmitting = false;
-            }
-          });
-      }
+      // Always use createGuardianWithImages (with undefined image if none selected)
+      const onProgress = (progress: FileUploadProgress) => {
+        this.uploadProgress = progress.percentage;
+      };
+
+      const imageFile = this.selectedImageFile || undefined;
+
+      this.guardianService.createGuardianWithImages(
+        createRequest,
+        imageFile,
+        onProgress
+      ).subscribe({
+        next: (response) => {
+          this.isSubmitting = false;
+          this.uploadProgress = null;
+          this.onFormSuccess(response.message);
+        },
+        error: (error) => {
+          this.error = error.message;
+          this.isSubmitting = false;
+          this.uploadProgress = null;
+        }
+      });
     }
   }
 
