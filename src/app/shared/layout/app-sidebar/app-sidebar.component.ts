@@ -3,6 +3,7 @@ import { Component, ElementRef, QueryList, ViewChildren, ChangeDetectorRef } fro
 import { SidebarService } from '../../services/sidebar.service';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
 
 type NavItem = {
   name: string;
@@ -19,6 +20,7 @@ type NavItem = {
     RouterModule,
   ],
   templateUrl: './app-sidebar.component.html',
+  styleUrls: ['./app-sidebar.component.scss'],
 })
 export class AppSidebarComponent {
 
@@ -60,6 +62,8 @@ export class AppSidebarComponent {
       path: "/attendance/class",
     },
   ];
+  schoolData!: any;
+  userData!: any;
 
   openSubmenu: string | null | number = null;
   subMenuHeights: { [key: string]: number } = {};
@@ -74,11 +78,14 @@ export class AppSidebarComponent {
   constructor(
     public sidebarService: SidebarService,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private authService: AuthService
   ) {
     this.isExpanded$ = this.sidebarService.isExpanded$;
     this.isMobileOpen$ = this.sidebarService.isMobileOpen$;
     this.isHovered$ = this.sidebarService.isHovered$;
+    this.userData = this.authService.getUserData();
+    this.schoolData = this.userData?.school;
   }
 
   ngOnInit() {
@@ -177,13 +184,10 @@ export class AppSidebarComponent {
   }
 
   onSubmenuClick() {
-    console.log('click submenu');
     this.isMobileOpen$.subscribe(isMobile => {
       if (isMobile) {
         this.sidebarService.setMobileOpen(false);
       }
     }).unsubscribe();
   }  
-
-  
 }

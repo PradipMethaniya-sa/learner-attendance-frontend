@@ -16,22 +16,18 @@ export class AuthInterceptor implements HttpInterceptor {
   private toastr = inject(ToastrService);
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    const token = localStorage.getItem('access_token');
-
-    console.log('AuthInterceptor running:', request.url);
-    console.log('Token:', token);
-
-    // Prepare headers
+    const token = localStorage.getItem('access_token'); // Only use token if no userData
+    const userData = this.getUserData();
     const headers: { [key: string]: string } = {};
-
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+    if (userData && !this.isExcludedUrl(request.url)) {
+      const authToken = localStorage.getItem('access_token');
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
     }
-
-    // Add required headers for all API requests if they exist in localStorage
-    const schoolId = localStorage.getItem('school_id');
-    const termId = localStorage.getItem('term_id');
-    const yearId = localStorage.getItem('year_id');
+    const schoolId = userData?.school?.id;
+    const termId = userData?.activeTermId;
+    const yearId = userData?.activeAcademicYearId;
 
     if (schoolId) {
       headers['x-school-id'] = schoolId;
@@ -55,6 +51,15 @@ export class AuthInterceptor implements HttpInterceptor {
         return this.handleError(error);
       })
     );
+  }
+
+  private isExcludedUrl(url: string): boolean {
+    return url.includes('/auth/login') || url.includes('/auth/change-password');
+  }
+
+  private getUserData(): any {
+    const userData = localStorage.getItem('userData');
+    return userData ? JSON.parse(userData) : null;
   }
 
   private handleError(error: HttpErrorResponse): Observable<never> {
@@ -107,14 +112,6 @@ export class AuthInterceptor implements HttpInterceptor {
     // Show toastr notification
     this.showNotification(errorMessage, errorType);
 
-    // Log error for debugging
-    console.error('HTTP Error:', {
-      status: error.status,
-      url: error.url,
-      message: errorMessage,
-      error: error
-    });
-
     return throwError(() => ({
       message: errorMessage,
       status: error.status,
@@ -149,9 +146,11 @@ export class AuthInterceptor implements HttpInterceptor {
   }
 
   private handleUnauthorized(): void {
-    // Clear stored tokens
+    // Clear stored tokens and user data
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    localStorage.removeItem('userData');
+    localStorage.removeItem('temp_token');
     
     // Redirect to login page (you might want to use Router for this)
     // For now, just show a message and let the component handle redirection

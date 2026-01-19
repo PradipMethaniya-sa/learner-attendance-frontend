@@ -51,12 +51,12 @@ export class SigninFormComponent {
     };
 
     this.authService.login(loginRequest).subscribe({
-      next: (success) => {
+      next: (result) => {
         this.isLoading = false;
-        if (!success) {
+        if (!result.success) {
           this.errorMessage = 'Invalid email or password';
         }
-        // Navigation is handled by the auth guard
+        // Navigation is handled by the auth service based on login response
       },
       error: () => {
         this.isLoading = false;

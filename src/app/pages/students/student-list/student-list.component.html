@@ -39,7 +39,7 @@
     <!-- Modal Content -->
     <div class="relative w-full rounded-3xl bg-white dark:bg-gray-900 max-w-4xl max-h-[90vh] overflow-y-auto">
       <app-student-form
-        [student]="selectedStudent"
+        [studentId]="selectedStudentId"
         (close)="onStudentFormClose()"
         (success)="onStudentFormSuccess()"
       ></app-student-form>
