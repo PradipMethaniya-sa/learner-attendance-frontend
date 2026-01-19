@@ -17,6 +17,7 @@ import { ImagesComponent } from './pages/ui-elements/images/images.component';
 import { VideosComponent } from './pages/ui-elements/videos/videos.component';
 import { SignInComponent } from './pages/auth-pages/sign-in/sign-in.component';
 import { SignUpComponent } from './pages/auth-pages/sign-up/sign-up.component';
+import { SetPasswordComponent } from './pages/auth-pages/set-password/set-password.component';
 import { CalenderComponent } from './pages/calender/calender.component';
 import { StudentListComponent } from './pages/students/student-list/student-list.component';
 import { GuardianListComponent } from './pages/guardians/guardian-list/guardian-list.component';
@@ -24,6 +25,7 @@ import { ClassAttendanceComponent } from './pages/attendance/class-attendance/cl
 import { StudentsAttendanceComponent } from './pages/attendance/students-attendance/students-attendance.component';
 import { AuthGuard } from './shared/guards/auth.guard';
 import { NoAuthGuard } from './shared/guards/no-auth.guard';
+import { SetPasswordGuard } from './shared/guards/set-password.guard';
 import { SchoolListComponent } from './pages/schools/school-list/school-list.component';
 import { ClassListComponent } from './pages/classes/class-list/class-list.component';
 import { StaffListComponent } from './pages/staff/staff-list/staff-list.component';
@@ -163,6 +165,12 @@ export const routes: Routes = [
     path:'signup',
     component:SignUpComponent,
     title:'Angular Sign Up Dashboard | TailAdmin - Angular Admin Dashboard Template'
+  },
+  {
+    path:'set-password',
+    component:SetPasswordComponent,
+    // canActivate: [SetPasswordGuard],
+    title:'Set Password | TailAdmin - Angular Admin Dashboard Template'
   },
   // error pages
   {

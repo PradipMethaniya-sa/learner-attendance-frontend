@@ -16,7 +16,7 @@
   (mouseleave)="sidebarService.setHovered(false)"
 >
   <div
-    class="py-8 flex"
+    class="py-8 flex school-logo"
     [ngClass]="{
       'xl:justify-center': !((isExpanded$ | async) || (isHovered$ | async)),
       'justify-start': (isExpanded$ | async) || (isHovered$ | async)
@@ -26,14 +26,14 @@
       @if ((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async)) {
       <img
         class="dark:hidden"
-        src="/images/logo/logo.svg"
+        [src]="schoolData.logoUrl ? schoolData.logoUrl : '/images/logo/logo.svg'"
         alt="Logo"
         width="160"
         height="32"
       />
       <img
         class="hidden dark:block"
-        src="/images/logo/logo-dark.svg"
+        [src]="schoolData.logoUrl ? schoolData.logoUrl : '/images/logo/logo-dark.svg'"
         alt="Logo"
         width="160"
         height="32"
@@ -259,10 +259,10 @@
     <!-- Bottom User Profile -->
     <div class="p-4 border-t border-gray-200 dark:border-gray-700">
       <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors">
-        <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCoU120-qnijFmSaRR2IvID6zFVjjhAGvikkpzB3gNr6v37DUTOSuaDzTsC3164bM59AiAhAwVJzUvn1eMxyQD61nnhXd-v3ls5amfWd0Gq_DUx_XnwwVSmre4zt8sUwIzofas18jCz0bNX1Z1tYczcKZZJPb3RRQS5JM0ds3NWllU7379IsFJboee1DcUP0iv0RiNBMaMDfbkBFo3h1YctKtbnh3bFqq5X1XjqgL_R41wXCxOIoNA4EHO7Bdp3YLnUTSQooOE8EWFf");' alt="Portrait of the user"></div>
+        <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("{{schoolData?.logoUrl}}");' alt="Portrait of the user"></div>
         <div class="flex flex-col overflow-hidden">
-          <h3 class="text-gray-900 dark:text-white text-sm font-semibold truncate">Jane Principal</h3>
-          <p class="text-gray-500 dark:text-gray-400 text-xs truncate">Admin Access</p>
+          <h3 class="text-gray-900 dark:text-white text-sm font-semibold truncate">{{userData?.firstName}} {{userData?.lastName}}</h3>
+          <p class="text-gray-500 dark:text-gray-400 text-xs truncate">{{userData?.role}}</p>
         </div>
       </div>
     </div>
