@@ -26,14 +26,14 @@
       @if ((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async)) {
       <img
         class="dark:hidden"
-        [src]="schoolData.logoUrl ? schoolData.logoUrl : '/images/logo/logo.svg'"
+        [src]="schoolData?.logoUrl ? schoolData.logoUrl : '/images/logo/logo.svg'"
         alt="Logo"
         width="160"
         height="32"
       />
       <img
         class="hidden dark:block"
-        [src]="schoolData.logoUrl ? schoolData.logoUrl : '/images/logo/logo-dark.svg'"
+        [src]="schoolData?.logoUrl ? schoolData.logoUrl : '/images/logo/logo-dark.svg'"
         alt="Logo"
         width="160"
         height="32"

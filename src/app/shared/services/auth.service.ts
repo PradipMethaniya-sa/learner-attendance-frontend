@@ -24,7 +24,7 @@ export class AuthService {
     private http: HttpClient,
     private router: Router,
     private toastr: ToastrService
-  ) {}
+  ) { }
 
   login(credentials: LoginRequest): Observable<{ success: boolean; isFirstTime: boolean }> {
     return this.http.post<any>(`${this.API_BASE_URL}/auth/login`, credentials).pipe(
@@ -41,10 +41,10 @@ export class AuthService {
             this.getUserProfile().subscribe({
               next: (profile) => {
                 this.setUserData(profile);
-                this.router.navigate(['/schools']);
+                this.router.navigate(['']);
               },
               error: () => {
-                this.router.navigate(['/schools']);
+                this.router.navigate(['']);
               }
             });
             return { success: true, isFirstTime: false };
@@ -77,11 +77,11 @@ export class AuthService {
   getUserProfile(): Observable<any> {
     const token = this.getToken();
     const headers: { [key: string]: string } = {};
-    
+
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
-    
+
     return this.http.get<any>(`${this.API_BASE_URL}/auth/me`, { headers }).pipe(
       map((response: any) => response.data)
     );
@@ -132,5 +132,8 @@ export class AuthService {
 
   private clearTempToken(): void {
     localStorage.removeItem(this.TEMP_TOKEN_KEY);
+  }
+  getUserRole(): string {
+    return this.getUserData()?.role || '';
   }
 }

@@ -29,6 +29,7 @@ import { SetPasswordGuard } from './shared/guards/set-password.guard';
 import { SchoolListComponent } from './pages/schools/school-list/school-list.component';
 import { ClassListComponent } from './pages/classes/class-list/class-list.component';
 import { StaffListComponent } from './pages/staff/staff-list/staff-list.component';
+import { RoleGuard } from './shared/guards/role.guard';
 
 export const routes: Routes = [
   {
@@ -118,13 +119,17 @@ export const routes: Routes = [
       {
         path:'students',
         component:StudentListComponent,
-        title:'Student List | TailAdmin - Angular Admin Dashboard Template'
+        title:'Student List | TailAdmin - Angular Admin Dashboard Template',
+        canActivate: [RoleGuard],
+        data: { roles: ['School Admin'] }
       },
       // Guardian Management
       {
         path:'guardians',
         component:GuardianListComponent,
-        title:'Guardians | TailAdmin - Angular Admin Dashboard Template'
+        title:'Guardians | TailAdmin - Angular Admin Dashboard Template',
+        canActivate: [RoleGuard],
+        data: { roles: ['School Admin'] }
       },
       // Attendance Management
       {
@@ -135,22 +140,30 @@ export const routes: Routes = [
       {
         path:'attendance/students',
         component:StudentsAttendanceComponent,
-        title:'Student Attendance | TailAdmin - Angular Admin Dashboard Template'
+        title:'Student Attendance | TailAdmin - Angular Admin Dashboard Template',
+        canActivate: [RoleGuard], 
+        data: { roles: ['School Admin'] }
       },
       {
         path:'schools',
         component:SchoolListComponent,
-        title:'Schools | TailAdmin - Angular Admin Dashboard Template'
+        title:'Schools | TailAdmin - Angular Admin Dashboard Template',
+        canActivate: [RoleGuard],
+        data: { roles: ['Administrator'] }
       },
       {
         path:'classes',
         component:ClassListComponent,
-        title:'Classes | TailAdmin - Angular Admin Dashboard Template'
+        title:'Classes | TailAdmin - Angular Admin Dashboard Template',
+        canActivate: [RoleGuard],
+        data: { roles: ['School Admin'] }
       },
       {
         path:'staff',
         component:StaffListComponent,
-        title:'Staff | TailAdmin - Angular Admin Dashboard Template'
+        title:'Staff | TailAdmin - Angular Admin Dashboard Template',
+        canActivate: [RoleGuard],
+        data: { roles: ['School Admin'] }
       },
     ]
   },
