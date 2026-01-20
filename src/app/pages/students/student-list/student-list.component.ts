@@ -264,8 +264,8 @@ export class StudentListComponent implements OnInit, OnDestroy {
   }
 
   onStudentFormSuccess(): void {
-    this.loadStudents();
     this.onStudentFormClose();
+    this.loadStudents();
   }
 
   getStatusBadgeColor(status: string): string {

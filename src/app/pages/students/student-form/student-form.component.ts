@@ -405,7 +405,6 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
       relation: ''
     });
     // Reload guardians for fresh state
-    this.loadGuardians();
   }
 
   private resetLocationFields(): void {
@@ -459,7 +458,7 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
       this.toastr.error('No student selected for update');
       return;
     }
-    this.handleGuardianUpdate();
+
     // Always use updateStudentWithImages (with undefined image if none selected)
     const onProgress = (progress: FileUploadProgress) => {
       this.uploadProgress = progress.percentage;
@@ -467,6 +466,7 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
 
     const imageFile = this.selectedImageFiles.length > 0 ? this.selectedImageFiles[0] : undefined;
 
+    // Update student first, then handle guardians
     this.studentService.updateStudentWithImages(
       this.selectedStudent.id,
       updateRequest,
@@ -474,6 +474,8 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
       onProgress
     ).subscribe({
       next: (response) => {
+        // Student updated successfully, now handle guardians
+        this.handleGuardianUpdate();
         this.uploadProgress = null;
       },
       error: (error) => {
@@ -571,6 +573,7 @@ export class StudentFormComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   private onFormSuccess(message?: string): void {
+    this.isSubmitting = false;
     this.toastr.success(message || 'Student operation completed successfully');
     this.success.emit();
   }
