@@ -1,68 +1,71 @@
 <app-page-breadcrumb pageTitle="Student Attendance" />
-
-<!-- Page Header -->
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-  <div>
-    <h1 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Student Attendance Entry</h1>
-    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Mark and manage student attendance for today.</p>
-  </div>
-</div>
-
-<!-- Context Information -->
+<!-- Filters Panel -->
 <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 mb-6">
-  <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-    <div class="flex flex-col sm:flex-row gap-6">
-      <div class="flex items-center gap-3">
-        <div class="size-10 rounded-lg bg-brand-50 dark:bg-brand-900/20 flex items-center justify-center text-brand-600 dark:text-brand-400">
-          <span class="material-symbols-outlined">class</span>
-        </div>
-        <div>
-          <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Class</p>
-          <p class="text-sm font-bold text-gray-900 dark:text-white">{{ selectedClass }}</p>
-        </div>
+  <form [formGroup]="filterForm">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div class="flex flex-col sm:flex-row gap-6">
+      <!-- Class Dropdown -->
+      <div class="w-64">
+        <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">Class</p>
+        @if (isLoadingClasses) {
+          <div class="w-full h-10 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-3 flex items-center">
+            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400 mr-2"></div>
+            <span class="text-sm text-gray-500">Loading classes...</span>
+          </div>
+        } @else {
+          <div class="relative">
+            <select 
+              formControlName="classId"
+              (change)="onClassChange($event)"
+              class="w-full h-10 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-3 text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-gray-900 dark:text-white appearance-none pr-8"
+            >
+              <option value="">Please select class</option>
+              @for (classOption of classes; track classOption.id) {
+                <option [value]="classOption.id">{{ classOption.name }}</option>
+              }
+            </select>
+            <span class="material-symbols-outlined absolute right-2 top-2.5 text-gray-400 pointer-events-none text-xl">expand_more</span>
+          </div>
+        }
       </div>
-      <div class="flex items-center gap-3">
-        <div class="size-10 rounded-lg bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
-          <span class="material-symbols-outlined">calendar_month</span>
-        </div>
-        <div>
-          <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Date</p>
-          <p class="text-sm font-bold text-gray-900 dark:text-white">{{ selectedDate }}</p>
-        </div>
+      
+      <!-- Date Picker -->
+      <div class="w-48">
+        <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">Date</p>
+        <app-date-picker 
+          id="attendance-date"
+          label=""
+          placeholder="Select date"
+          (dateChange)="onDatePickerChange($event)"
+        />
       </div>
     </div>
+    
     <div class="flex items-center gap-3">
-      <div class="text-right hidden sm:block">
+      <!-- <div class="text-right hidden sm:block">
         <p class="text-xs text-gray-500 dark:text-gray-400">Total Students</p>
         <p class="text-sm font-bold text-gray-900 dark:text-white">{{ totalStudents }}</p>
-      </div>
-      <button (click)="editContext()" class="text-sm text-brand-500 hover:text-brand-600 font-medium px-3 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-1" type="button">
-        <span class="material-symbols-outlined text-[18px]">edit</span>
-        Edit Context
-      </button>
+      </div> -->
+      
+      @if (selectedClass && selectedDate && students.length > 0) {
+        <div class="flex gap-3 ml-auto">
+          <button 
+            (click)="openMarkAllPresentModal()"
+            class="px-6 py-2 text-sm font-medium text-white bg-brand-500 hover:bg-brand-600 rounded-lg shadow-sm transition-colors"
+          >
+            Mark All Present
+          </button>
+          <button 
+            (click)="markAllAbsent()"
+            class="px-6 py-2 text-sm font-medium text-white bg-brand-500 hover:bg-brand-600 rounded-lg shadow-sm transition-colors"
+          >
+            Mark All Absent
+          </button>
+        </div>
+      }
     </div>
   </div>
-</div>
-
-<!-- Search and Actions -->
-<div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-  <div class="relative w-full sm:w-80">
-    <span class="material-symbols-outlined absolute left-3 top-2.5 text-gray-400">search</span>
-    <input 
-      (input)="onSearchChange($event)"
-      class="w-full pl-10 pr-4 py-2 rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-sm shadow-sm" 
-      placeholder="Search student name or ID..." 
-      type="text"
-    />
-  </div>
-  <div class="flex items-center gap-2 w-full sm:w-auto">
-    <button (click)="markAllPresent()" class="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-      Mark All Present
-    </button>
-    <button (click)="markAllAbsent()" class="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-      Mark All Absent
-    </button>
-  </div>
+  </form>
 </div>
 
 <!-- Attendance Table -->
@@ -79,58 +82,110 @@
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-100 dark:divide-gray-700/50">
-        @for (student of filteredStudents; track student.id) {
-          <tr [class]="getRowClass(student.isPresent) + ' group hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors'">
-            <td class="px-6 py-4">
-              <div class="flex items-center gap-3">
-                <div class="size-10 rounded-full {{ student.avatarColor }} flex items-center justify-center font-bold text-sm">
-                  {{ student.initials }}
-                </div>
-                <div>
-                  <p class="font-medium text-gray-900 dark:text-white">{{ student.name }}</p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">ID: {{ student.studentId }}</p>
-                </div>
+        @if (!selectedClass || !selectedDate) {
+          <!-- Initial State -->
+          <tr>
+            <td colspan="5" class="px-6 py-12 text-center">
+              <div class="flex flex-col items-center justify-center">
+                <span class="material-symbols-outlined text-4xl text-gray-400 mb-4">calendar_month</span>
+                <p class="text-lg font-medium text-gray-900 dark:text-white mb-2">Please select class and date</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Select a class and date to view attendance data.</p>
               </div>
             </td>
-            <td class="px-6 py-4">
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input 
-                  [checked]="student.isPresent"
-                  (change)="onAttendanceChange(student.id, $any($event.target).checked)"
-                  class="sr-only peer" 
-                  type="checkbox"
-                />
-                <div class="w-12 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-brand-500/20 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-500"></div>
-                <span [class]="getAttendanceStatusClass(student.isPresent) + ' ml-3 text-sm font-medium transition-colors'">
-                  {{ student.isPresent ? 'Present' : 'Absent' }}
-                </span>
-              </label>
-            </td>
-            <td class="px-6 py-4">
-              @if (student.isPresent) {
-                <input 
-                  [value]="student.timeIn"
-                  (input)="onTimeInChange(student.id, $any($event.target).value)"
-                  class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-brand-500 focus:ring focus:ring-brand-500/20 sm:text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white py-1.5" 
-                  type="time"
-                />
-              } @else {
-                <span class="text-gray-400 text-sm">—</span>
-              }
-            </td>
-            <td class="px-6 py-4">
-              <input 
-                [value]="student.remarks"
-                (input)="onRemarksChange(student.id, $any($event.target).value)"
-                class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-brand-500 focus:ring focus:ring-brand-500/20 sm:text-sm bg-transparent text-gray-900 dark:text-white py-1.5 placeholder:text-gray-400" 
-                placeholder="Add optional comment" 
-                type="text"
-              />
-            </td>
-            <td class="px-6 py-4 text-center">
-              <span class="material-symbols-outlined text-green-500 text-[20px]" title="Synced">cloud_done</span>
+          </tr>
+        } @else if (isLoading) {
+          <!-- Loading State -->
+          <tr>
+            <td colspan="5" class="px-6 py-12 text-center">
+              <div class="flex flex-col items-center justify-center">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500 mb-4"></div>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Loading attendance data...</p>
+              </div>
             </td>
           </tr>
+        } @else if (students.length === 0) {
+          <!-- Empty State -->
+          <tr>
+            <td colspan="5" class="px-6 py-12 text-center">
+              <div class="flex flex-col items-center justify-center">
+                <span class="material-symbols-outlined text-4xl text-gray-400 mb-4">person_off</span>
+                <p class="text-lg font-medium text-gray-900 dark:text-white mb-2">No data found</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">No attendance data found for the selected class and date.</p>
+              </div>
+            </td>
+          </tr>
+        } @else {
+          <!-- Student Data -->
+          @for (student of filteredStudents; track student.id) {
+            <tr [class]="getRowClass(student.isPresent) + ' group hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors'">
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  @if (student.avatarThumbUrl) {
+                    <img 
+                      [src]="student.avatarThumbUrl" 
+                      [alt]="student.name + ' avatar'"
+                      class="size-10 rounded-full object-cover"
+                    />
+                  } @else {
+                    <div class="size-10 rounded-full {{ student.avatarColor }} flex items-center justify-center font-bold text-sm">
+                      {{ student.initials }}
+                    </div>
+                  }
+                  <div>
+                    <p class="font-medium text-gray-900 dark:text-white">{{ student.name }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">ID: {{ student.studentUid }}</p>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    [checked]="student.isPresent"
+                    (change)="onAttendanceChange(student.id, $any($event.target).checked)"
+                    class="sr-only peer" 
+                    type="checkbox"
+                  />
+                  <div class="relative w-12 h-6 rounded-full bg-gray-200 dark:bg-gray-700
+         peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-brand-500/20
+         peer-checked:bg-green-500
+         after:content-['']
+         after:absolute after:top-[2px] after:left-[2px]
+         after:h-5 after:w-5 after:rounded-full after:bg-white
+         after:transition-transform
+         peer-checked:after:translate-x-6"></div>
+                  <span [class]="getAttendanceStatusClass(student.isPresent) + ' ml-3 text-sm font-medium transition-colors'">
+                    {{ student.isPresent ? 'Present' : 'Absent' }}
+                  </span>
+                </label>
+              </td>
+              <td class="px-6 py-4">
+                <input 
+                  [value]="student.isPresent ? student.timeIn : '--:--'"
+                  (input)="onTimeInChange(student.id, $any($event.target).value)"
+                  [disabled]="!student.isPresent"
+                  class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-brand-500 focus:ring focus:ring-brand-500/20 sm:text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white py-1.5 disabled:opacity-50 disabled:cursor-not-allowed" 
+                  type="text"
+                />
+              </td>
+              <td class="px-6 py-4">
+                <input 
+                  [value]="student.remarks"
+                  (input)="onRemarksChange(student.id, $any($event.target).value)"
+                  [disabled]="!hasStudentChanged(student.id)"
+                  class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-brand-500 focus:ring focus:ring-brand-500/20 sm:text-sm bg-transparent text-gray-900 dark:text-white py-1.5 placeholder:text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed" 
+                  placeholder="Add optional comment" 
+                  type="text"
+                />
+              </td>
+              <td class="px-6 py-4 text-center">
+                @if (hasStudentChanged(student.id)) {
+                  <span class="material-symbols-outlined text-orange-500 text-[20px]" title="Has changes">sync</span>
+                } @else {
+                  <span class="material-symbols-outlined text-green-500 text-[20px]" title="Synced">cloud_done</span>
+                }
+              </td>
+            </tr>
+          }
         }
       </tbody>
     </table>
@@ -138,11 +193,71 @@
 </div>
 
 <!-- Save Actions -->
-<div class="flex justify-end gap-3 mt-6">
-  <button class="px-6 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-    Cancel
-  </button>
-  <button (click)="saveAttendance()" class="px-6 py-2 text-sm font-medium text-white bg-brand-500 hover:bg-brand-600 rounded-lg shadow-sm transition-colors">
-    Save Attendance
-  </button>
+<div class="flex justify-between items-center gap-3 mt-6">
+  <div class="text-sm text-gray-500 dark:text-gray-400">
+    <span>All changes saved</span>
+  </div>
+  <div class="flex gap-3">
+    <button 
+      (click)="loadAttendance()" 
+      class="px-6 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+    >
+      Reload
+    </button>
+    <button 
+      (click)="saveAttendance()" 
+      [disabled]="!hasUnsavedChanges || isSaving"
+      class="px-6 py-2 text-sm font-medium text-white bg-brand-500 hover:bg-brand-600 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg shadow-sm transition-colors flex items-center gap-2"
+    >
+      @if (isSaving) {
+        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+        Saving...
+      } @else {
+        <span>Save Attendance</span>
+      }
+    </button>
+  </div>
 </div>
+
+<!-- Time Selection Modal -->
+@if (showTimeSelectionModal) {
+  <div class="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-xl p-6 w-full max-w-md">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Select Time for All Students</h3>
+        <button 
+          (click)="closeTimeSelectionModal()"
+          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+        >
+          <span class="material-symbols-outlined text-[24px]">close</span>
+        </button>
+      </div>
+      
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Time In
+        </label>
+        <input 
+          type="time"
+          [(ngModel)]="selectedTimeForAll"
+          class="w-full h-10 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-3 text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-gray-900 dark:text-white"
+        />
+      </div>
+      
+      <div class="flex gap-3 justify-end">
+        <button 
+          (click)="closeTimeSelectionModal()"
+          class="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+        >
+          Cancel
+        </button>
+        <button 
+          (click)="confirmMarkAllPresent()"
+          class="px-4 py-2 text-sm font-medium text-white bg-brand-500 hover:bg-brand-600 rounded-lg transition-colors"
+        >
+          Mark All Present
+        </button>
+      </div>
+    </div>
+  </div>
+}

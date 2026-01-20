@@ -89,7 +89,11 @@ export class AppTableComponent {
   }
 
   getCellValue(item: any, key: string): string {
-    return item[key] || '-';
+    const value = item[key];
+    if (typeof value === 'boolean') {
+      return value ? 'Active' : 'Inactive';
+    }
+    return value ?? '-';
   }
 
   getImageUrl(item: any, column: TableColumn): string {

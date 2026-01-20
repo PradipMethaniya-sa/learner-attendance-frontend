@@ -1,0 +1,146 @@
+<div class="p-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+        {{ isEditMode ? 'Edit Attendance Type' : 'Add New Attendance Type' }}
+      </h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        {{ isEditMode ? 'Update attendance type information' : 'Create a new attendance type for your organization' }}
+      </p>
+    </div>
+    <button 
+      (click)="onCancel()" 
+      class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+    >
+      <span class="material-symbols-outlined text-2xl">close</span>
+    </button>
+  </div>
+
+  <!-- Form -->
+  <form [formGroup]="attendanceTypeForm" (ngSubmit)="onSubmit()">
+    <!-- Error Message -->
+    @if (error) {
+      <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg dark:bg-red-900/20 dark:border-red-800">
+        <div class="flex items-center">
+          <span class="material-symbols-outlined text-red-600 dark:text-red-400 mr-2">error</span>
+          <p class="text-sm text-red-800 dark:text-red-200">{{ error }}</p>
+        </div>
+      </div>
+    }
+
+    <div class="grid grid-cols-1 gap-6">
+      <!-- Name -->
+      <div>
+        <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Name <span class="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          id="name"
+          formControlName="name"
+          class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-500 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-brand-400"
+          placeholder="e.g., Regular, Flexible, Remote"
+          [class.border-red-500]="attendanceTypeForm.get('name')?.invalid && attendanceTypeForm.get('name')?.touched"
+        />
+        @if (getErrorMessage('name')) {
+          <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getErrorMessage('name') }}</p>
+        }
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Description <span class="text-red-500">*</span>
+        </label>
+        <textarea
+          id="description"
+          formControlName="description"
+          rows="3"
+          class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-500 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-brand-400"
+          placeholder="Describe the attendance type and its policies"
+          [class.border-red-500]="attendanceTypeForm.get('description')?.invalid && attendanceTypeForm.get('description')?.touched"
+        ></textarea>
+        @if (getErrorMessage('description')) {
+          <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getErrorMessage('description') }}</p>
+        }
+      </div>
+
+      <!-- Time Thresholds -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Late Arrival Threshold -->
+        <div>
+          <app-time-picker
+            id="lateArrivalThreshold"
+            label="Late Arrival Threshold"
+            placeholder="HH:MM:SS format"
+            [defaultTime]="attendanceTypeForm.get('lateArrivalThreshold')?.value"
+            (timeChange)="onLateArrivalTimeChange($event)"
+          ></app-time-picker>
+          @if (getErrorMessage('lateArrivalThreshold')) {
+            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getErrorMessage('lateArrivalThreshold') }}</p>
+          }
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400"> Time after which arrival is considered late</p>
+        </div>
+
+        <!-- Early Departure Threshold -->
+        <div>
+          <app-time-picker
+            id="earlyArrivalThreshold"
+            label="Early Departure Threshold"
+            placeholder="HH:MM:SS format"
+            [defaultTime]="attendanceTypeForm.get('earlyArrivalThreshold')?.value"
+            (timeChange)="onEarlyDepartureTimeChange($event)"
+          ></app-time-picker>
+          @if (getErrorMessage('earlyArrivalThreshold')) {
+            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getErrorMessage('earlyArrivalThreshold') }}</p>
+          }
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Time before which departure is considered early</p>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div>
+        <label class="flex items-center">
+          <input
+            type="checkbox"
+            formControlName="isActive"
+            class="h-4 w-4 rounded border-gray-300 bg-white text-brand-500 shadow-theme-xs focus:border-brand-500 focus:ring-3 focus:ring-brand-500/10 dark:bg-gray-900 dark:border-gray-700 dark:checked:bg-brand-500 dark:checked:border-brand-500 dark:focus:ring-brand-600/20"
+          />
+          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Active</span>
+        </label>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          Inactive attendance types cannot be used for attendance tracking
+        </p>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+      <button
+        type="button"
+        (click)="onCancel()"
+        class="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-theme-xs hover:bg-gray-50 focus:outline-hidden focus:ring-3 focus:ring-gray-500/10 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:focus:ring-gray-600/20"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        [disabled]="isSubmitting || attendanceTypeForm.invalid"
+        class="px-4 py-2.5 text-sm font-medium text-white bg-brand-500 rounded-lg shadow-theme-xs hover:bg-brand-600 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 disabled:bg-brand-300 disabled:cursor-not-allowed"
+      >
+        @if (isSubmitting) {
+          <span class="inline-flex items-center">
+            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ isEditMode ? 'Updating...' : 'Creating...' }}
+          </span>
+        } @else {
+          {{ isEditMode ? 'Update Attendance Type' : 'Create Attendance Type' }}
+        }
+      </button>
+    </div>
+  </form>
+</div>

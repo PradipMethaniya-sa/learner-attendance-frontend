@@ -9,7 +9,7 @@ import { ConfirmDialogComponent } from '../../confirm-dialog';
 @Component({
   selector: 'app-user-dropdown',
   templateUrl: './user-dropdown.component.html',
-  imports: [CommonModule, RouterModule, DropdownComponent, DropdownItemTwoComponent, ConfirmDialogComponent]
+  imports: [CommonModule, RouterModule, DropdownComponent, ConfirmDialogComponent]
 })
 export class UserDropdownComponent {
   isOpen = false;
