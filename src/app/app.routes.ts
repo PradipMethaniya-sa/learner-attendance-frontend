@@ -30,6 +30,7 @@ import { SchoolListComponent } from './pages/schools/school-list/school-list.com
 import { ClassListComponent } from './pages/classes/class-list/class-list.component';
 import { StaffListComponent } from './pages/staff/staff-list/staff-list.component';
 import { RoleGuard } from './shared/guards/role.guard';
+import { AttendanceTypeListComponent } from './pages/attendance/attendance-types/attendance-type-list/attendance-type-list.component';
 
 export const routes: Routes = [
   {
@@ -142,6 +143,13 @@ export const routes: Routes = [
         component:StudentsAttendanceComponent,
         title:'Student Attendance | TailAdmin - Angular Admin Dashboard Template',
         canActivate: [RoleGuard], 
+        data: { roles: ['School Admin'] }
+      },
+      {
+        path:'attendance/types',
+        component:AttendanceTypeListComponent,
+        title:'Attendance Types | TailAdmin - Angular Admin Dashboard Template',
+        canActivate: [RoleGuard],
         data: { roles: ['School Admin'] }
       },
       {

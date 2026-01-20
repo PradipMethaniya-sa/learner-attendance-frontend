@@ -66,7 +66,11 @@ export class AppSidebarComponent {
     {
       icon: `<span class="material-symbols-outlined" style="font-size: 24px;">calendar_today</span>`,
       name: "Attendance",
-      path: "/attendance/class",
+      subItems: [
+        { name: "Class Attendance", path: "/attendance/class" },
+        { name: "Student Attendance", path: "/attendance/students" },
+        { name: "Attendance Types", path: "/attendance/types" }
+      ],
       roles: ["School Admin"]
     },
   ];
