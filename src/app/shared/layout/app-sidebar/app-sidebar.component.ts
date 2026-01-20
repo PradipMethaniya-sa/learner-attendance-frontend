@@ -11,6 +11,7 @@ type NavItem = {
   path?: string;
   new?: boolean;
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+  roles?: string[];
 };
 
 @Component({
@@ -30,36 +31,43 @@ export class AppSidebarComponent {
       icon: `<span class="material-symbols-outlined" style="font-size: 24px;">dashboard</span>`,
       name: "Dashboard",
       path: "/",
+      roles: ["Administrator", "School Admin"]
     },
     {
       icon: `<span class="material-symbols-outlined" style="font-size: 24px;">school</span>`,
       name: "Schools",
       path: "/schools",
+      roles: ["Administrator"]
     },
     {
       icon: `<span class="material-symbols-outlined" style="font-size: 24px;">person</span>`,
       name: "Students",
       path: "/students",
+      roles: ["School Admin"]
     },
     {
       icon: `<span class="material-symbols-outlined" style="font-size: 24px;">group</span>`,
       name: "Guardians",
       path: "/guardians",
+      roles: ["School Admin"]
     },
     {
       icon: `<span class="material-symbols-outlined" style="font-size: 24px;">badge</span>`,
       name: "Staff",
       path: "/staff",
+      roles: ["School Admin"]
     },
     {
       icon: `<span class="material-symbols-outlined" style="font-size: 24px;">class</span>`,
       name: "Classes",
       path: "/classes",
+      roles: ["School Admin"]
     },
     {
       icon: `<span class="material-symbols-outlined" style="font-size: 24px;">calendar_today</span>`,
       name: "Attendance",
       path: "/attendance/class",
+      roles: ["School Admin"]
     },
   ];
   schoolData!: any;
@@ -86,6 +94,10 @@ export class AppSidebarComponent {
     this.isHovered$ = this.sidebarService.isHovered$;
     this.userData = this.authService.getUserData();
     this.schoolData = this.userData?.school;
+    const role = this.userData?.role;
+    console.log('User Role in Sidebar:', role);
+    this.navItems = this.navItems.filter(item => !item.roles || item.roles.includes(role));
+    console.log('Filtered Nav Items:', this.navItems);
   }
 
   ngOnInit() {

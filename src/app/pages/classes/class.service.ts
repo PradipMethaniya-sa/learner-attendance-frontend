@@ -10,6 +10,7 @@ import {
   ApiResponse,
   ClassListResponse
 } from './class.model';
+import { AuthService } from '../../shared/services/auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -17,16 +18,7 @@ import {
 export class ClassService {
   private readonly apiUrl = environment.API_URL || 'http://localhost:5050';
 
-  constructor(private http: HttpClient) {}
-
-  private getSchoolId(): string {
-    const schoolId = localStorage.getItem('school_id');
-    if (!schoolId) {
-      throw new Error('School ID not found in localStorage. Please ensure you are logged in to a school.');
-    }
-    return schoolId;
-  }
-
+  constructor(private http: HttpClient,private authService: AuthService) {}
   getClasses(filters: ClassFilters = {}): Observable<ApiResponse<ClassListResponse>> {
     let params = new HttpParams();
 
@@ -60,7 +52,7 @@ export class ClassService {
   }
 
   createClass(classData: ClassCreateRequest): Observable<ApiResponse<SchoolClass>> {
-    const schoolId = this.getSchoolId();
+    const schoolId = this.authService.getUserData()?.school?.id;
     const payload = {
       ...classData,
       schoolId
@@ -69,7 +61,7 @@ export class ClassService {
   }
 
   updateClass(id: string, classData: ClassUpdateRequest): Observable<ApiResponse<SchoolClass>> {
-    const schoolId = this.getSchoolId();
+    const schoolId = this.authService.getUserData()?.school?.id;
     const payload = {
       ...classData,
       schoolId
