@@ -63,7 +63,7 @@
       </div>
     </div>
 
-    <form>
+    <form [formGroup]="signupForm" (ngSubmit)="onSignUp()">
       <div class="space-y-5">
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <!-- First Name -->
@@ -71,14 +71,40 @@
             <app-label>
               First Name<span class="text-error-500">*</span>
             </app-label>
-            <app-input-field type="text" [value]="fname" id="fname" name="fname" placeholder="Enter your first name" />
+            <input
+              type="text"
+              formControlName="fname"
+              placeholder="Enter your first name"
+              class="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700 dark:text-white/90 dark:focus:border-brand-800 dark:bg-gray-900"
+              [ngClass]="{ 'border-error-500 focus:border-error-300 focus:ring-error-500/20 dark:text-error-400 dark:border-error-500 dark:focus:border-error-800': f['fname'].invalid && f['fname'].touched }"
+            />
+            @if (f['fname'].invalid && f['fname'].touched) {
+              <div class="mt-1 text-sm text-red-600">
+                @if (f['fname'].hasError('required')) {
+                  First name is required
+                }
+              </div>
+            }
           </div>
           <!-- Last Name -->
           <div class="sm:col-span-1">
             <app-label>
               Last Name<span class="text-error-500">*</span>
             </app-label>
-            <app-input-field type="text" [value]="lname" id="lname" name="lname" placeholder="Enter your last name" />
+            <input
+              type="text"
+              formControlName="lname"
+              placeholder="Enter your last name"
+              class="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700 dark:text-white/90 dark:focus:border-brand-800 dark:bg-gray-900"
+              [ngClass]="{ 'border-error-500 focus:border-error-300 focus:ring-error-500/20 dark:text-error-400 dark:border-error-500 dark:focus:border-error-800': f['lname'].invalid && f['lname'].touched }"
+            />
+            @if (f['lname'].invalid && f['lname'].touched) {
+              <div class="mt-1 text-sm text-red-600">
+                @if (f['lname'].hasError('required')) {
+                  Last name is required
+                }
+              </div>
+            }
           </div>
         </div>
         <!-- Email -->
@@ -86,14 +112,35 @@
           <app-label>
             Email <span class="text-error-500">*</span>
           </app-label>
-          <app-input-field type="email" [value]="email" id="email" name="email" placeholder="Enter your email" />
+          <input
+            type="email"
+            formControlName="email"
+            placeholder="Enter your email"
+            class="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700 dark:text-white/90 dark:focus:border-brand-800 dark:bg-gray-900"
+            [ngClass]="{ 'border-error-500 focus:border-error-300 focus:ring-error-500/20 dark:text-error-400 dark:border-error-500 dark:focus:border-error-800': f['email'].invalid && f['email'].touched }"
+          />
+          @if (f['email'].invalid && f['email'].touched) {
+            <div class="mt-1 text-sm text-red-600">
+              @if (f['email'].hasError('required')) {
+                Email is required
+              }
+              @if (f['email'].hasError('email')) {
+                Please enter a valid email
+              }
+            </div>
+          }
         </div>
         <!-- Password -->
         <div>
           <app-label>Password <span class="text-error-500">*</span></app-label>
           <div class="relative">
-            <app-input-field [type]="showPassword ? 'text' : 'password'" placeholder="Enter your password"
-              [value]="password" name="password" class="form-input" required />
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="Enter your password"
+              class="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700 dark:text-white/90 dark:focus:border-brand-800 dark:bg-gray-900"
+              [ngClass]="{ 'border-error-500 focus:border-error-300 focus:ring-error-500/20 dark:text-error-400 dark:border-error-500 dark:focus:border-error-800': f['password'].invalid && f['password'].touched }"
+            />
             <span (click)="togglePasswordVisibility()" class="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2">
               @if (showPassword) {
               <svg width="1em" height="1em" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"
@@ -112,6 +159,16 @@
               }
             </span>
           </div>
+          @if (f['password'].invalid && f['password'].touched) {
+            <div class="mt-1 text-sm text-red-600">
+              @if (f['password'].hasError('required')) {
+                Password is required
+              }
+              @if (f['password'].hasError('minlength')) {
+                Password must be at least 6 characters long
+              }
+            </div>
+          }
         </div>
         <!-- Checkbox -->
         <div class="flex items-center gap-3">
@@ -130,6 +187,7 @@
         <!-- Button -->
         <div>
           <button
+            type="submit"
             class="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600">
             Sign Up
           </button>

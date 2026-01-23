@@ -1,14 +1,38 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { ToastrService } from 'ngx-toastr';
 
 export interface LoginRequest {
   email: string;
   password: string;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  code: string;
+  message: string;
+  data: T;
+  timestamp: string;
+  traceId: string;
+}
+
+export interface LoginResponse {
+  requiresPasswordChange: boolean;
+  token?: string;
+  tempToken?: string;
+}
+
+export interface ForgotPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface ResetPasswordResponse {
+  success: boolean;
+  message: string;
 }
 
 @Injectable({
@@ -22,19 +46,17 @@ export class AuthService {
 
   constructor(
     private http: HttpClient,
-    private router: Router,
-    private toastr: ToastrService
+    private router: Router
   ) { }
 
-  login(credentials: LoginRequest): Observable<{ success: boolean; isFirstTime: boolean }> {
-    return this.http.post<any>(`${this.API_BASE_URL}/auth/login`, credentials).pipe(
-      map((response: any) => {
+  login(credentials: LoginRequest): Observable<ApiResponse<LoginResponse>> {
+    return this.http.post<ApiResponse<LoginResponse>>(`${this.API_BASE_URL}/auth/login`, credentials).pipe(
+      map((response: ApiResponse<LoginResponse>) => {
         if (response.success && response.data) {
           if (response.data.requiresPasswordChange && response.data.tempToken) {
             // First-time login - store temp token and redirect to set password
             this.setTempToken(response.data.tempToken);
             this.router.navigate(['/set-password']);
-            return { success: true, isFirstTime: true };
           } else if (response.data.token) {
             // Normal login - store auth token and get user profile
             this.setToken(response.data.token);
@@ -47,29 +69,21 @@ export class AuthService {
                 this.router.navigate(['']);
               }
             });
-            return { success: true, isFirstTime: false };
           }
         }
-        return { success: false, isFirstTime: false };
-      }),
-      catchError(() => {
-        return of({ success: false, isFirstTime: false });
+        return response;
       })
     );
   }
 
-  setPassword(request: any): Observable<boolean> {
-    return this.http.post<any>(`${this.API_BASE_URL}/auth/change-password`, request).pipe(
-      map((response: any) => {
+  setPassword(request: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.API_BASE_URL}/auth/change-password`, request).pipe(
+      map((response: ApiResponse<any>) => {
         if (response.success) {
           this.clearTempToken();
           this.router.navigate(['/signin']);
-          return true;
         }
-        return false;
-      }),
-      catchError(() => {
-        return of(false);
+        return response;
       })
     );
   }
@@ -89,8 +103,8 @@ export class AuthService {
 
   logout(): void {
     this.http.post<any>(`${this.API_BASE_URL}/auth/logout`, {}).subscribe({
-      next: (res) => {
-        this.toastr.success(res.message || 'Logged out successfully');
+      next: () => {
+        // Success handled by interceptor
       }
     });
     localStorage.removeItem(this.TOKEN_KEY);
@@ -135,5 +149,13 @@ export class AuthService {
   }
   getUserRole(): string {
     return this.getUserData()?.role || '';
+  }
+
+  forgotPassword(request: { email: string }): Observable<ApiResponse<ForgotPasswordResponse>> {
+    return this.http.post<ApiResponse<ForgotPasswordResponse>>(`${this.API_BASE_URL}/auth/request-password-reset`, request);
+  }
+
+  resetPasswordWithOtp(request: { email: string; otp: string; newPassword: string }): Observable<ApiResponse<ResetPasswordResponse>> {
+    return this.http.post<ApiResponse<ResetPasswordResponse>>(`${this.API_BASE_URL}/auth/reset-password-with-otp`, request);
   }
 }

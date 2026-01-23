@@ -11,36 +11,38 @@
       </div>
 
       <!-- Form -->
-      <form (ngSubmit)="onSignIn()" class="space-y-6">
-        <!-- Error Message -->
-        @if (errorMessage) {
-          <div class="p-3 text-sm text-red-600 bg-red-50 rounded-lg dark:bg-red-900/20 dark:text-red-400">
-            {{ errorMessage }}
-          </div>
-        }
-
+      <form [formGroup]="signinForm" (ngSubmit)="onSignIn()" class="space-y-6">
         <div>
           <app-label>Email <span class="text-error-500">*</span></app-label>
-          <app-input-field
+          <input
             type="email"
             placeholder="info@gmail.com"
-            [(value)]="email"
-            name="email"
-            class="form-input"
-            required
+            formControlName="email"
+            class="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700 dark:text-white/90 dark:focus:border-brand-800 dark:bg-gray-900"
+            [ngClass]="{ 'border-error-500 focus:border-error-300 focus:ring-error-500/20 dark:text-error-400 dark:border-error-500 dark:focus:border-error-800': f['email'].invalid && f['email'].touched }"
           />
+          <!-- Validation Messages -->
+          @if (f['email'].invalid && f['email'].touched) {
+            <div class="mt-1 text-sm text-red-600">
+              @if (f['email'].hasError('required')) {
+                Email is required
+              }
+              @if (f['email'].hasError('email')) {
+                Please enter a valid email
+              }
+            </div>
+          }
         </div>
 
         <div>
           <app-label>Password <span class="text-error-500">*</span></app-label>
           <div class="relative">
-            <app-input-field
+            <input
               [type]="showPassword ? 'text' : 'password'"
               placeholder="Enter your password"
-              [(value)]="password"
-              name="password"
-              class="form-input"
-              required
+              formControlName="password"
+              class="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700 dark:text-white/90 dark:focus:border-brand-800 dark:bg-gray-900"
+              [ngClass]="{ 'border-error-500 focus:border-error-300 focus:ring-error-500/20 dark:text-error-400 dark:border-error-500 dark:focus:border-error-800': f['password'].invalid && f['password'].touched }"
             />
             <span
               (click)="togglePasswordVisibility()"
@@ -53,6 +55,14 @@
               }
             </span>
           </div>
+          <!-- Validation Messages -->
+          @if (f['password'].invalid && f['password'].touched) {
+            <div class="mt-1 text-sm text-red-600">
+              @if (f['password'].hasError('required')) {
+                Password is required
+              }
+            </div>
+          }
         </div>
 
         <div class="flex items-center justify-between">
@@ -63,7 +73,7 @@
             />
           </div>
           <a
-            routerLink="/reset-password"
+            routerLink="/forgot-password"
             class="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
           >
             Forgot password?
@@ -88,7 +98,7 @@
         </app-button>
       </form>
 
-      <div class="mt-5">
+      <!-- <div class="mt-5">
         <p class="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
           Don't have an account?
           <a
@@ -98,7 +108,7 @@
             Sign Up
           </a>
         </p>
-      </div>
+      </div> -->
     </div>
   </div>
 

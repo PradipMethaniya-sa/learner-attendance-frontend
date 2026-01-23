@@ -1,20 +1,25 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { LabelComponent } from '../../form/label/label.component';
 import { ButtonComponent } from '../../ui/button/button.component';
 import { InputFieldComponent } from '../../form/input/input-field.component';
 import { RouterModule } from '@angular/router';
-import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-set-password-form',
+  standalone: true,
   imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
     LabelComponent,
     ButtonComponent,
-    InputFieldComponent,
-    RouterModule,
-    FormsModule
+    RouterModule
   ],
   templateUrl: './set-password-form.component.html',
   styles: ``
@@ -23,19 +28,66 @@ export class SetPasswordFormComponent {
   showCurrentPassword = false;
   showNewPassword = false;
   showConfirmPassword = false;
+  showOtp = false;
   isLoading = false;
-  errorMessage = '';
 
-  currentPassword = '';
-  newPassword = '';
-  confirmPassword = '';
+  setPasswordForm!: FormGroup;
+  isResetMode = false;
+  pageTitle = 'Set Password';
+  pageDescription = 'This is your first time logging in. Please set a new password to continue.';
+  email = '';
 
   constructor(
     private authService: AuthService,
-    private toastr: ToastrService
-  ) {}
+    private toastr: ToastrService,
+    private route: ActivatedRoute,
+    private router: Router,
+    private fb: FormBuilder
+  ) {
+    this.checkResetMode();
+    this.initializeForm();
+  }
 
-  togglePasswordVisibility(field: 'current' | 'new' | 'confirm') {
+  private checkResetMode() {
+    this.route.queryParams.subscribe(params => {
+      if (params['reset'] === 'true') {
+        this.isResetMode = true;
+        this.pageTitle = 'Reset Password';
+        this.pageDescription = 'Enter the OTP sent to your email and set a new password.';
+        this.email = sessionStorage.getItem('resetEmail') || '';
+      }
+    });
+  }
+
+  private initializeForm() {
+    const formConfig: any = {
+      newPassword: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', Validators.required]
+    };
+
+    if (this.isResetMode) {
+      formConfig.otp = ['', Validators.required];
+    } else {
+      formConfig.currentPassword = ['', Validators.required];
+    }
+
+    this.setPasswordForm = this.fb.group(formConfig, {
+      validators: this.passwordMatchValidator
+    });
+  }
+
+  private passwordMatchValidator(formGroup: FormGroup) {
+    const newPassword = formGroup.get('newPassword')?.value;
+    const confirmPassword = formGroup.get('confirmPassword')?.value;
+    
+    if (newPassword !== confirmPassword) {
+      formGroup.get('confirmPassword')?.setErrors({ passwordMismatch: true });
+    } else {
+      formGroup.get('confirmPassword')?.setErrors(null);
+    }
+  }
+
+  togglePasswordVisibility(field: 'current' | 'new' | 'confirm' | 'otp') {
     switch (field) {
       case 'current':
         this.showCurrentPassword = !this.showCurrentPassword;
@@ -46,69 +98,77 @@ export class SetPasswordFormComponent {
       case 'confirm':
         this.showConfirmPassword = !this.showConfirmPassword;
         break;
+      case 'otp':
+        this.showOtp = !this.showOtp;
+        break;
     }
-  }
-
-  validateForm(): boolean {
-    this.errorMessage = '';
-
-    if (!this.currentPassword || !this.newPassword || !this.confirmPassword) {
-      this.errorMessage = 'All fields are required';
-      return false;
-    }
-
-    if (this.newPassword === this.currentPassword) {
-      this.errorMessage = 'New password must be different from current password';
-      return false;
-    }
-
-    if (this.newPassword !== this.confirmPassword) {
-      this.errorMessage = 'Confirm password must match new password';
-      return false;
-    }
-
-    if (this.newPassword.length < 6) {
-      this.errorMessage = 'Password must be at least 6 characters long';
-      return false;
-    }
-
-    return true;
   }
 
   onSetPassword() {
-    if (!this.validateForm()) {
-      return;
-    }
-
-    const tempToken = this.authService.getTempToken();
-    if (!tempToken) {
-      this.errorMessage = 'Session expired. Please login again.';
+    if (this.setPasswordForm.invalid) {
+      // Mark all fields as touched to show validation messages
+      Object.keys(this.setPasswordForm.controls).forEach(key => {
+        this.setPasswordForm.get(key)?.markAsTouched();
+      });
       return;
     }
 
     this.isLoading = true;
-    this.errorMessage = '';
+
+    if (this.isResetMode) {
+      this.handlePasswordReset();
+    } else {
+      this.handleFirstTimeSetup();
+    }
+  }
+
+  private handleFirstTimeSetup() {
+    const tempToken = this.authService.getTempToken();
+    if (!tempToken) {
+      // Error handled by interceptor
+      this.isLoading = false;
+      return;
+    }
 
     const request = {
       tempToken,
-      currentPassword: this.currentPassword,
-      newPassword: this.newPassword,
-      confirmPassword: this.confirmPassword
+      currentPassword: this.setPasswordForm.value.currentPassword,
+      newPassword: this.setPasswordForm.value.newPassword,
+      confirmPassword: this.setPasswordForm.value.confirmPassword
     };
 
-    this.authService.setPassword(request).subscribe({
-      next: (success) => {
+    this.authService.setPassword(request).pipe(
+      finalize(() => {
         this.isLoading = false;
-        if (success) {
-          this.toastr.success('Password changed successfully. Please login with your new password.', 'Success');
-        } else {
-          this.errorMessage = 'Failed to change password. Please try again.';
-        }
-      },
-      error: () => {
-        this.isLoading = false;
-        this.errorMessage = 'An error occurred. Please try again.';
+      })
+    ).subscribe({
+      next: (res) => {
+        this.toastr.success(res.message || 'Password set successfully. Please login with your new password.', 'Success');
       }
     });
+  }
+
+  private handlePasswordReset() {
+    const request = {
+      email: this.email,
+      otp: this.setPasswordForm.value.otp,
+      newPassword: this.setPasswordForm.value.newPassword
+    };
+
+    this.authService.resetPasswordWithOtp(request).pipe(
+      finalize(() => {
+        this.isLoading = false;
+      })
+    ).subscribe({
+      next: (res) => {
+        this.toastr.success(res.message || 'Password reset successfully. Please login with your new password.', 'Success');
+        this.router.navigate(['/signin']);
+      }
+    });
+  }
+
+  // Helper method to get form controls
+  get f() {
+    return this.setPasswordForm.controls;
   }
 }
