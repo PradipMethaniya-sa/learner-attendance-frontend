@@ -197,7 +197,7 @@ export const routes: Routes = [
   {
     path:'set-password',
     component:SetPasswordComponent,
-    // canActivate: [SetPasswordGuard],
+    canActivate: [SetPasswordGuard],
     title:'Set Password | TailAdmin - Angular Admin Dashboard Template'
   },
   // error pages
