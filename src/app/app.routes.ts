@@ -18,6 +18,7 @@ import { VideosComponent } from './pages/ui-elements/videos/videos.component';
 import { SignInComponent } from './pages/auth-pages/sign-in/sign-in.component';
 import { SignUpComponent } from './pages/auth-pages/sign-up/sign-up.component';
 import { SetPasswordComponent } from './pages/auth-pages/set-password/set-password.component';
+import { ForgotPasswordComponent } from './pages/auth-pages/forgot-password/forgot-password.component';
 import { CalenderComponent } from './pages/calender/calender.component';
 import { StudentListComponent } from './pages/students/student-list/student-list.component';
 import { GuardianListComponent } from './pages/guardians/guardian-list/guardian-list.component';
@@ -181,6 +182,12 @@ export const routes: Routes = [
     component:SignInComponent,
     canActivate: [NoAuthGuard],
     title:'Angular Sign In Dashboard | TailAdmin - Angular Admin Dashboard Template'
+  },
+  {
+    path:'forgot-password',
+    component:ForgotPasswordComponent,
+    canActivate: [NoAuthGuard],
+    title:'Forgot Password | TailAdmin - Angular Admin Dashboard Template'
   },
   {
     path:'signup',

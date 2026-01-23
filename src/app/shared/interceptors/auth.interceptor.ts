@@ -79,7 +79,7 @@ export class AuthInterceptor implements HttpInterceptor {
           errorMessage = error.error?.message || 'Bad request. Please check your input.';
           break;
         case 401:
-          errorMessage = 'Unauthorized. Please log in again.';
+          errorMessage = error.error?.message || 'Unauthorized. Please log in again.';
           this.handleUnauthorized();
           break;
         case 403:
@@ -154,7 +154,7 @@ export class AuthInterceptor implements HttpInterceptor {
     
     // Redirect to login page (you might want to use Router for this)
     // For now, just show a message and let the component handle redirection
-    this.showNotification('Session expired. Please log in again.', 'warning');
+    // this.showNotification('Session expired. Please log in again.', 'warning');
     
     // You could also emit an event or use a service to notify about auth state change
     // this.authService.logout();
